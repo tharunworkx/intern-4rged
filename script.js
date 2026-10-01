@@ -4,6 +4,7 @@ if (typeof document === "undefined") {
 }
 
 const inputbox = document.getElementById("task-input");
+const categorySelect = document.getElementById("category-select");
 const dueDateInput = document.getElementById("due-date");
 const dueDateTrigger = document.getElementById("due-date-trigger");
 const dueDateLabel = document.getElementById("due-date-label");
@@ -37,6 +38,8 @@ let taskToAnimate = null;
 let currentFilter = "all";
 const currentDate = new Date();
 let visibleMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+let taskToAnimate = null;
+let taskFilter = "all";
 
 function toISODate(date) {
     const year = date.getFullYear();
@@ -167,7 +170,9 @@ function handleAddTask(event) {
         category: categorySelect.value,
         completed: editingIndex === null ? false : storedTodo[editingIndex].completed,
         dueDate: dueDateInput.value,
-        priority: getSelectedPriority()
+        priority: getSelectedPriority(),
+        category: categorySelect.value,
+        completed: editingIndex === null ? false : storedTodo[editingIndex].completed
     };
 
     if (!task.text) return;
@@ -206,12 +211,12 @@ function displayTodo() {
         if (task === taskToAnimate) row.classList.add("is-entering");
 
         const title = document.createElement("p");
-        title.className = "task";
+        title.className = task.completed ? "task completed-text" : "task";
         title.textContent = task.text;
 
         const serialCell = document.createElement("td");
         serialCell.className = "row-number";
-        serialCell.textContent = String(index + 1);
+        serialCell.textContent = String(rowIndex + 1);
 
         const taskCell = document.createElement("td");
         taskCell.className = "task-cell";
