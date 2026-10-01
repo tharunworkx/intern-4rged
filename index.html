@@ -1,30 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>4rged Todo</title>
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-
-    <!-- Main Full Screen Container -->
     <div class="window-container">
-        
-        <!-- Left Sidebar -->
         <aside class="sidebar">
-            <!-- App Brand Logo Header (Replacing macOS dots) -->
             <div class="sidebar-top">
                 <div class="sidebar-brand">
-                    <div class="brand-icon-box">
-                        <i class="fa-solid fa-layer-group"></i>
-                    </div>
+                    <div class="brand-icon-box" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></div>
                     <div class="brand-details">
                         <span class="brand-title">4rged</span>
                         <span class="brand-subtitle">WORKSPACE</span>
@@ -32,74 +23,111 @@
                 </div>
             </div>
 
-            <!-- Navigation Filter Menu -->
-            <nav class="sidebar-nav">
-                <button class="nav-item filter-btn active" data-filter="all">
-                    <i class="fa-solid fa-inbox"></i>
-                    <span>All Tasks</span>
+            <nav class="sidebar-nav" aria-label="Task views">
+                <button class="nav-item task-view-filter active is-active" type="button" data-filter="all" aria-pressed="true">
+                    <i class="fa-solid fa-inbox" aria-hidden="true"></i><span>All tasks</span>
                 </button>
-                <button class="nav-item filter-btn" data-filter="active">
-                    <i class="fa-regular fa-circle-dot"></i>
-                    <span>Active</span>
+                <button class="nav-item task-view-filter" type="button" data-filter="active" aria-pressed="false">
+                    <i class="fa-regular fa-circle-dot" aria-hidden="true"></i><span>Active</span>
                 </button>
-                <button class="nav-item filter-btn" data-filter="completed">
-                    <i class="fa-solid fa-circle-check"></i>
-                    <span>Completed</span>
+                <button class="nav-item task-view-filter" type="button" data-filter="completed" aria-pressed="false">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>Completed</span>
                 </button>
             </nav>
 
-            <!-- Sidebar Bottom Action -->
             <div class="sidebar-bottom">
-                <button id="quick-add-btn" class="floating-add-btn" title="Add New Task">
-                    <i class="fa-solid fa-plus"></i>
+                <button id="quick-add-btn" class="floating-add-btn" type="button" aria-label="Add new task" title="Add new task">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
                 </button>
             </div>
         </aside>
 
-        <!-- Right Main Content Area -->
         <main class="main-content">
-            
-            <!-- Top Header Section -->
             <header class="content-header">
                 <div class="header-titles">
-                    <span class="sub-badge">4rged — MVP</span>
-                    <h1 class="main-title">4rged Todo</h1>
+                    <span class="sub-badge">PERSONAL ORGANIZER</span>
+                    <h1 class="main-title">Task dashboard</h1>
                 </div>
-
-                <!-- Top Filter Pills -->
-                <div id="filter-container" class="top-filter-pills">
-                    <button class="filter-btn active" data-filter="all">All</button>
-                    <button class="filter-btn" data-filter="active">Active</button>
-                    <button class="filter-btn" data-filter="completed">Completed</button>
-                </div>
+                <button id="theme-toggle" type="button" aria-pressed="false">Dark mode</button>
             </header>
 
-            <!-- Task Input Container -->
-            <div id="input-container">
-                <section id="inner_cont">
-                    <div class="input-field-box">
-                        <i class="fa-solid fa-pen-to-square input-icon"></i>
-                        <input id="input" placeholder="Enter a new task..." autocomplete="off">
+            <form id="task-form">
+                <label class="task-field task-name" for="task-input">
+                    <span>Task</span>
+                    <input id="task-input" type="text" placeholder="What needs doing?" required>
+                </label>
+                <div class="task-field due-date-field">
+                    <span id="due-date-caption">Due date</span>
+                    <input id="due-date" type="hidden">
+                    <button id="due-date-trigger" type="button" aria-labelledby="due-date-caption due-date-label" aria-haspopup="dialog" aria-expanded="false" aria-controls="calendar-popover">
+                        <span id="due-date-label">Choose a date</span>
+                        <span class="calendar-mark" aria-hidden="true"><span>31</span></span>
+                    </button>
+                    <div id="calendar-popover" role="dialog" aria-label="Choose due date" hidden>
+                        <div class="calendar-header">
+                            <button id="calendar-previous" type="button" aria-label="Previous month">&lsaquo;</button>
+                            <h2 id="calendar-month"></h2>
+                            <button id="calendar-next" type="button" aria-label="Next month">&rsaquo;</button>
+                        </div>
+                        <div class="calendar-weekdays" aria-hidden="true">
+                            <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+                        </div>
+                        <div id="calendar-days" class="calendar-days" role="group" aria-label="Calendar days"></div>
+                        <div class="calendar-footer">
+                            <button id="calendar-clear" type="button">Clear</button>
+                            <button id="calendar-today" type="button">Today</button>
+                        </div>
                     </div>
-                    <button id="addbtn">ADD</button>
-                </section>
-            </div>
+                </div>
+                <fieldset class="task-field priority-field">
+                    <legend>Priority</legend>
+                    <div class="priority-options">
+                        <label class="priority-choice priority-high"><input type="radio" name="priority" value="High"><span>High</span></label>
+                        <label class="priority-choice priority-medium"><input type="radio" name="priority" value="Medium" checked><span>Medium</span></label>
+                        <label class="priority-choice priority-low"><input type="radio" name="priority" value="Low"><span>Low</span></label>
+                    </div>
+                </fieldset>
+                <label class="task-field category-field" for="category-select">
+                    <span>Category</span>
+                    <select id="category-select">
+                        <option value="Work">Work</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Urgent">Urgent</option>
+                    </select>
+                </label>
+                <button id="addbtn" type="submit">ADD</button>
+            </form>
 
-            <!-- Section Subheading -->
-            <div class="section-heading">
-                <h2 id="section-heading-text">Task Items</h2>
-            </div>
+            <section id="progress-container" aria-label="Task progress">
+                <div class="progress-header">
+                    <span class="progress-title">Task progress</span>
+                    <span id="progress-stats">0% completed (0/0)</span>
+                </div>
+                <div class="progress-track" role="progressbar" aria-label="Tasks completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div id="progress-bar"></div>
+                </div>
+            </section>
 
-            <!-- Todo Items Grid -->
-            <div id="todo-container">
-                <ul id="task-list">
-                    <!-- Tasks dynamically rendered here -->
-                </ul>
-            </div>
-
+            <section id="todo-container" aria-label="Tasks">
+                <div class="section-heading">
+                    <h2 id="section-heading-text">Task items</h2>
+                </div>
+                <div class="filter-bar">
+                    <label class="visually-hidden" for="search-input">Search tasks</label>
+                    <input id="search-input" type="search" placeholder="Search tasks..." autocomplete="off">
+                </div>
+                <div class="task-table-wrap">
+                    <table id="todo-table">
+                        <caption class="visually-hidden">Saved tasks with categories, due dates, priorities, and status</caption>
+                        <thead>
+                            <tr><th scope="col">#</th><th scope="col">Task</th><th scope="col">Category</th><th scope="col">Due date</th><th scope="col">Priority</th><th scope="col">Status</th><th scope="col">Actions</th></tr>
+                        </thead>
+                        <tbody aria-live="polite"></tbody>
+                    </table>
+                </div>
+            </section>
         </main>
     </div>
-
     <script src="./script.js"></script>
 </body>
 </html>
