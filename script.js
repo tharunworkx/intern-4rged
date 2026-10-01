@@ -2,10 +2,12 @@ const inputbox = document.getElementById("input");
 const categorySelect = document.getElementById("category-select");
 const addbtn = document.getElementById("addbtn");
 const todolist = document.querySelector("#todo-container ul");
+const searchInput = document.getElementById("search-input");
 const progressBar = document.getElementById("progress-bar");
 const progressStats = document.getElementById("progress-stats");
 
 let editingIndex = null;
+let taskToAnimate = null;
 
 // Load and normalize existing data from localStorage (handles old string-only items)
 let rawTodos = JSON.parse(localStorage.getItem("todos")) || [];
@@ -50,11 +52,19 @@ function updateProgress() {
 // Render all todos
 function displayTodo() {
     todolist.innerHTML = "";
+    const query = searchInput.value.trim().toLowerCase();
 
     storedTodo.forEach((task, index) => {
+        if (!task.text.toLowerCase().includes(query) && !task.category.toLowerCase().includes(query)) {
+            return;
+        }
+
         const list = document.createElement("li");
         if (task.completed) {
             list.classList.add("completed");
+        }
+        if (task === taskToAnimate) {
+            list.classList.add("is-entering");
         }
 
         const categoryClass = `tag-${(task.category || "personal").toLowerCase()}`;
@@ -77,6 +87,7 @@ function displayTodo() {
         todolist.appendChild(list);
     });
 
+    taskToAnimate = null;
     updateProgress();
 }
 
@@ -95,11 +106,12 @@ function handleAddtask() {
         addbtn.textContent = "ADD";
     } else {
         // Add new task
-        storedTodo.push({
+        taskToAnimate = {
             text: textValue,
             category: selectedCategory,
             completed: false
-        });
+        };
+        storedTodo.push(taskToAnimate);
     }
 
     saveToLocalStorage();
@@ -126,17 +138,29 @@ function handleListAction(e) {
     if (e.target.classList.contains("delete-btn")) {
         const index = Number(e.target.dataset.index);
         if (!isNaN(index) && storedTodo[index]) {
-            if (editingIndex === index) {
-                editingIndex = null;
-                addbtn.textContent = "ADD";
-                inputbox.value = "";
-            } else if (editingIndex !== null && editingIndex > index) {
-                editingIndex--;
-            }
+            const task = storedTodo[index];
+            const list = e.target.closest("li");
+            list.classList.add("is-removing");
+            list.querySelectorAll("button, input").forEach(control => {
+                control.disabled = true;
+            });
 
-            storedTodo.splice(index, 1);
-            saveToLocalStorage();
-            displayTodo();
+            window.setTimeout(() => {
+                const taskIndex = storedTodo.indexOf(task);
+                if (taskIndex === -1) return;
+
+                if (editingIndex === taskIndex) {
+                    editingIndex = null;
+                    addbtn.textContent = "ADD";
+                    inputbox.value = "";
+                } else if (editingIndex !== null && editingIndex > taskIndex) {
+                    editingIndex--;
+                }
+
+                storedTodo.splice(taskIndex, 1);
+                saveToLocalStorage();
+                displayTodo();
+            }, 220);
         }
         return;
     }
@@ -158,6 +182,7 @@ function handleListAction(e) {
 // Event Listeners
 addbtn.addEventListener("click", handleAddtask);
 todolist.addEventListener("click", handleListAction);
+searchInput.addEventListener("input", displayTodo);
 
 // Support pressing Enter key in the input box
 inputbox.addEventListener("keydown", (e) => {
