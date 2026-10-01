@@ -95,7 +95,7 @@ const todolist = document.querySelector("#task-list") || document.querySelector(
 const filterBtns = document.querySelectorAll(".filter-btn");
 const quickAddBtn = document.getElementById("quick-add-btn");
 
-// Modal Elements
+// Modal Elements (Feature 2)
 const deleteModal = document.getElementById("delete-modal");
 const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
 const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
@@ -190,14 +190,14 @@ function displayTodo() {
 
     // Feature 1: Empty State Illustration
     if (visibleTasks === 0) {
-        let filterName = currentFilter === "active" ? "active " : (currentFilter === "completed" ? "completed " : "");
+        let filterLabel = currentFilter === "active" ? "active " : (currentFilter === "completed" ? "completed " : "");
         todolist.innerHTML = `
             <li class="empty-state-card">
                 <div class="empty-state-icon">
                     <i class="fa-solid fa-clipboard-check"></i>
                 </div>
-                <h3 class="empty-state-title">No ${filterName}tasks found</h3>
-                <p class="empty-state-desc">You're all caught up! Add a new task above to stay productive.</p>
+                <h3 class="empty-state-title">No ${filterLabel}tasks found</h3>
+                <p class="empty-state-desc">You're all caught up! Add a new task above to stay organized.</p>
             </li>
         `;
     }
@@ -219,7 +219,7 @@ function closeDeleteModal() {
     }
 }
 
-// Perform Delete after confirmation
+// Confirm Delete Action
 function confirmDeleteTask() {
     if (taskToDeleteIndex !== null && taskToDeleteIndex >= 0 && taskToDeleteIndex < storedTodo.length) {
         storedTodo.splice(taskToDeleteIndex, 1);
@@ -256,7 +256,7 @@ function handleUpdate(e) {
         return;
     }
 
-    // 2. Delete Task (Triggers Confirmation Modal)
+    // 2. Delete Task -> Open Custom Confirmation Modal
     if (e.target.classList.contains("delete-btn") || e.target.closest(".delete-btn")) {
         openDeleteModal(index);
         return;
@@ -297,7 +297,7 @@ if (quickAddBtn) {
     });
 }
 
-// Modal Event Listeners (Feature 2)
+// Confirmation Modal Action Listeners (Feature 2)
 if (confirmDeleteBtn) {
     confirmDeleteBtn.addEventListener("click", confirmDeleteTask);
 }
