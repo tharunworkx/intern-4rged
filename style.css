@@ -1373,14 +1373,17 @@ main.main-content {
 }
 
 #theme-toggle {
-    min-height: 36px;
-    padding: 0 12px;
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+    place-items: center;
+    padding: 0;
     border: 1px solid var(--line);
     border-radius: 6px;
     background: var(--surface);
     color: var(--muted);
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 15px;
     cursor: pointer;
 }
 
