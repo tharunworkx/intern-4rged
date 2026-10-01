@@ -1,195 +1,401 @@
-const inputbox = document.getElementById("input");
+if (typeof document === "undefined") {
+    console.error("This is browser code. Open index.html in a browser instead of running script.js with Node.");
+    process.exit(0);
+}
+
+const inputbox = document.getElementById("task-input");
+const dueDateInput = document.getElementById("due-date");
+const dueDateTrigger = document.getElementById("due-date-trigger");
+const dueDateLabel = document.getElementById("due-date-label");
+const calendarPopover = document.getElementById("calendar-popover");
+const calendarMonth = document.getElementById("calendar-month");
+const calendarDays = document.getElementById("calendar-days");
 const categorySelect = document.getElementById("category-select");
+const calendarDateFormatter = new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+});
+const priorityInputs = document.querySelectorAll('input[name="priority"]');
+const taskForm = document.getElementById("task-form");
 const addbtn = document.getElementById("addbtn");
-const todolist = document.querySelector("#todo-container ul");
+const todolist = document.querySelector("#todo-table tbody");
+const themeToggle = document.getElementById("theme-toggle");
 const searchInput = document.getElementById("search-input");
 const progressBar = document.getElementById("progress-bar");
 const progressStats = document.getElementById("progress-stats");
-
 let editingIndex = null;
 let taskToAnimate = null;
+const currentDate = new Date();
+let visibleMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
 
-// Load and normalize existing data from localStorage (handles old string-only items)
-let rawTodos = JSON.parse(localStorage.getItem("todos")) || [];
-let storedTodo = rawTodos.map(item => {
-    if (typeof item === "string") {
-        return { text: item, category: "Personal", completed: false };
-    }
-    return {
-        text: item.text || "",
-        category: item.category || "Personal",
-        completed: Boolean(item.completed)
-    };
-});
-saveToLocalStorage();
-
-// Helper: Escape HTML to prevent injection
-function escapeHtml(str) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
+function toISODate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 }
 
-// Save todos array to localStorage
-function saveToLocalStorage() {
+function parseISODate(value) {
+    if (!value) return null;
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, month - 1, day);
+}
+
+function updateDueDateLabel() {
+    const selectedDate = parseISODate(dueDateInput.value);
+    dueDateLabel.textContent = selectedDate
+        ? calendarDateFormatter.format(selectedDate)
+        : "Choose a date";
+    dueDateTrigger.classList.toggle("has-date", Boolean(selectedDate));
+}
+
+function renderCalendar() {
+    const year = visibleMonth.getFullYear();
+    const month = visibleMonth.getMonth();
+    const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const selectedDate = dueDateInput.value;
+    const today = toISODate(new Date());
+    const cellCount = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+
+    calendarMonth.textContent = new Intl.DateTimeFormat(undefined, {
+        month: "long",
+        year: "numeric"
+    }).format(visibleMonth);
+    calendarDays.replaceChildren();
+
+    for (let cell = 0; cell < cellCount; cell += 1) {
+        const day = cell - firstWeekday + 1;
+        if (day < 1 || day > daysInMonth) {
+            const spacer = document.createElement("span");
+            spacer.setAttribute("aria-hidden", "true");
+            calendarDays.append(spacer);
+            continue;
+        }
+
+        const date = new Date(year, month, day);
+        const isoDate = toISODate(date);
+        const dayButton = document.createElement("button");
+        dayButton.type = "button";
+        dayButton.className = "calendar-day";
+        dayButton.dataset.date = isoDate;
+        dayButton.textContent = String(day);
+        dayButton.setAttribute("aria-label", calendarDateFormatter.format(date));
+        dayButton.setAttribute("aria-pressed", String(isoDate === selectedDate));
+
+        if (isoDate === selectedDate) dayButton.classList.add("is-selected");
+        if (isoDate === today) {
+            dayButton.classList.add("is-today");
+            dayButton.setAttribute("aria-current", "date");
+        }
+
+        const focusDate = selectedDate || (year === new Date().getFullYear() && month === new Date().getMonth() ? today : toISODate(new Date(year, month, 1)));
+        dayButton.tabIndex = isoDate === focusDate ? 0 : -1;
+        calendarDays.append(dayButton);
+    }
+}
+
+function closeCalendar(returnFocus = false) {
+    calendarPopover.hidden = true;
+    dueDateTrigger.setAttribute("aria-expanded", "false");
+    if (returnFocus) dueDateTrigger.focus();
+}
+
+function changeCalendarMonth(offset) {
+    visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + offset, 1);
+    renderCalendar();
+}
+
+function getSelectedPriority() {
+    return document.querySelector('input[name="priority"]:checked')?.value || "Medium";
+}
+
+function setSelectedPriority(priority) {
+    priorityInputs.forEach((input) => {
+        input.checked = input.value === priority;
+    });
+}
+
+let storedTodo = (JSON.parse(localStorage.getItem("todos")) || []).map((task) => {
+    if (typeof task === "string") {
+        return { text: task, category: "Personal", completed: false, dueDate: "", priority: "Medium" };
+    }
+
+    return {
+        text: task.text || "",
+        category: task.category || "Personal",
+        completed: Boolean(task.completed),
+        dueDate: task.dueDate || "",
+        priority: ["High", "Medium", "Low"].includes(task.priority) ? task.priority : "Medium"
+    };
+});
+
+function saveTodos() {
     localStorage.setItem("todos", JSON.stringify(storedTodo));
 }
 
-// Update the visual progress bar and text statistics
 function updateProgress() {
     const total = storedTodo.length;
-    const completed = storedTodo.filter(t => t.completed).length;
+    const completed = storedTodo.filter((task) => task.completed).length;
     const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
-
-    if (progressBar) {
-        progressBar.style.width = percentage + "%";
-    }
-    if (progressStats) {
-        progressStats.textContent = `${percentage}% Completed (${completed}/${total})`;
-    }
+    progressBar.style.width = `${percentage}%`;
+    progressStats.textContent = `${percentage}% Completed (${completed}/${total})`;
 }
 
-// Render all todos
+function resetForm() {
+    taskForm.reset();
+    updateDueDateLabel();
+    closeCalendar();
+    addbtn.textContent = "ADD";
+    editingIndex = null;
+}
+
+function handleAddTask(event) {
+    event.preventDefault();
+    const task = {
+        text: inputbox.value.trim(),
+        category: categorySelect.value,
+        completed: editingIndex === null ? false : storedTodo[editingIndex].completed,
+        dueDate: dueDateInput.value,
+        priority: getSelectedPriority()
+    };
+
+    if (!task.text) return;
+
+    if (editingIndex === null) {
+        taskToAnimate = task;
+        storedTodo.push(task);
+    } else {
+        storedTodo[editingIndex] = task;
+    }
+
+    saveTodos();
+    displayTodo();
+    resetForm();
+}
+
 function displayTodo() {
-    todolist.innerHTML = "";
+    todolist.replaceChildren();
     const query = searchInput.value.trim().toLowerCase();
+    const visibleTasks = storedTodo
+        .map((task, index) => ({ task, index }))
+        .filter(({ task }) => [task.text, task.category, task.dueDate, task.priority]
+            .some((value) => value.toLowerCase().includes(query)));
 
-    storedTodo.forEach((task, index) => {
-        if (!task.text.toLowerCase().includes(query) && !task.category.toLowerCase().includes(query)) {
-            return;
+    if (visibleTasks.length === 0) {
+        const emptyRow = document.createElement("tr");
+        const emptyCell = document.createElement("td");
+        emptyCell.colSpan = 7;
+        emptyCell.className = "empty-tasks";
+        emptyCell.textContent = query ? "No tasks match your search." : "Your tasks will appear here.";
+        emptyRow.append(emptyCell);
+        todolist.append(emptyRow);
+        taskToAnimate = null;
+        updateProgress();
+        return;
+    }
+
+    visibleTasks.forEach(({ task, index }) => {
+        const row = document.createElement("tr");
+        row.className = `task-row priority-${task.priority.toLowerCase()}`;
+        if (task.completed) row.classList.add("is-completed");
+        if (task === taskToAnimate) row.classList.add("is-entering");
+
+        const title = document.createElement("p");
+        title.className = "task";
+        title.textContent = task.text;
+
+        const serialCell = document.createElement("td");
+        serialCell.className = "row-number";
+        serialCell.textContent = String(index + 1);
+
+        const taskCell = document.createElement("td");
+        taskCell.className = "task-cell";
+        taskCell.append(title);
+
+        const categoryCell = document.createElement("td");
+        const categoryBadge = document.createElement("span");
+        categoryBadge.className = `category-tag tag-${task.category.toLowerCase()}`;
+        categoryBadge.textContent = task.category;
+        categoryCell.append(categoryBadge);
+
+        const dueDateCell = document.createElement("td");
+        dueDateCell.className = "due-date-cell";
+        if (task.dueDate) {
+            const dueDate = document.createElement("time");
+            dueDate.dateTime = task.dueDate;
+            dueDate.textContent = calendarDateFormatter.format(parseISODate(task.dueDate));
+            dueDateCell.append(dueDate);
+        } else {
+            dueDateCell.classList.add("no-due-date");
+            dueDateCell.textContent = "No due date";
         }
 
-        const list = document.createElement("li");
-        if (task.completed) {
-            list.classList.add("completed");
-        }
-        if (task === taskToAnimate) {
-            list.classList.add("is-entering");
-        }
+        const priorityCell = document.createElement("td");
+        priorityCell.className = "priority-cell";
 
-        const categoryClass = `tag-${(task.category || "personal").toLowerCase()}`;
+        const priorityBadge = document.createElement("span");
+        priorityBadge.className = `priority-badge priority-${task.priority.toLowerCase()}`;
+        priorityBadge.textContent = task.priority;
+        priorityCell.append(priorityBadge);
 
-        list.innerHTML = `
-            <div class="card-header">
-                <span class="category-tag ${categoryClass}">${escapeHtml(task.category || "Personal")}</span>
-                <label class="status-toggle">
-                    <input type="checkbox" class="task-checkbox" data-index="${index}" ${task.completed ? "checked" : ""}>
-                    <span>${task.completed ? "Done" : "Pending"}</span>
-                </label>
-            </div>
-            <p class="task ${task.completed ? "completed-text" : ""}">${escapeHtml(task.text)}</p>
-            <div class="btn-container">
-                <button class="edit-btn" data-index="${index}">Edit</button>
-                <button class="delete-btn" data-index="${index}">Delete</button>
-            </div>
-        `;
+        const statusCell = document.createElement("td");
+        const statusLabel = document.createElement("label");
+        statusLabel.className = "status-toggle";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "task-checkbox";
+        checkbox.dataset.index = String(index);
+        checkbox.checked = task.completed;
+        const statusText = document.createElement("span");
+        statusText.textContent = task.completed ? "Done" : "Pending";
+        statusLabel.append(checkbox, statusText);
+        statusCell.append(statusLabel);
 
-        todolist.appendChild(list);
+        const buttons = document.createElement("div");
+        buttons.className = "table-actions";
+
+        const editButton = document.createElement("button");
+        editButton.className = "edit-btn table-action-btn";
+        editButton.type = "button";
+        editButton.dataset.action = "edit";
+        editButton.dataset.index = index;
+        editButton.textContent = "Edit";
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "delete-btn table-action-btn";
+        deleteButton.type = "button";
+        deleteButton.dataset.action = "delete";
+        deleteButton.dataset.index = index;
+        deleteButton.textContent = "Delete";
+
+        const actionsCell = document.createElement("td");
+        actionsCell.className = "actions-cell";
+        buttons.append(editButton, deleteButton);
+        actionsCell.append(buttons);
+
+        row.append(serialCell, taskCell, categoryCell, dueDateCell, priorityCell, statusCell, actionsCell);
+        todolist.append(row);
     });
 
     taskToAnimate = null;
     updateProgress();
 }
 
-// Add or save task
-function handleAddtask() {
-    const textValue = inputbox.value.trim();
-    if (textValue.length === 0) return;
-
-    const selectedCategory = categorySelect.value;
-
-    if (editingIndex !== null && editingIndex >= 0 && editingIndex < storedTodo.length) {
-        // Update existing task
-        storedTodo[editingIndex].text = textValue;
-        storedTodo[editingIndex].category = selectedCategory;
-        editingIndex = null;
-        addbtn.textContent = "ADD";
-    } else {
-        // Add new task
-        taskToAnimate = {
-            text: textValue,
-            category: selectedCategory,
-            completed: false
-        };
-        storedTodo.push(taskToAnimate);
-    }
-
-    saveToLocalStorage();
-    displayTodo();
-
-    inputbox.value = "";
-    categorySelect.value = "Work";
-}
-
-// Handle clicks inside the todo list (checkbox toggle, edit, delete)
-function handleListAction(e) {
-    // Checkbox toggle
-    if (e.target.classList.contains("task-checkbox")) {
-        const index = Number(e.target.dataset.index);
-        if (!isNaN(index) && storedTodo[index]) {
-            storedTodo[index].completed = e.target.checked;
-            saveToLocalStorage();
+function handleTaskAction(event) {
+    if (event.target.classList.contains("task-checkbox")) {
+        const index = Number(event.target.dataset.index);
+        if (storedTodo[index]) {
+            storedTodo[index].completed = event.target.checked;
+            saveTodos();
             displayTodo();
         }
         return;
     }
 
-    // Delete task
-    if (e.target.classList.contains("delete-btn")) {
-        const index = Number(e.target.dataset.index);
-        if (!isNaN(index) && storedTodo[index]) {
-            const task = storedTodo[index];
-            const list = e.target.closest("li");
-            list.classList.add("is-removing");
-            list.querySelectorAll("button, input").forEach(control => {
-                control.disabled = true;
-            });
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
 
-            window.setTimeout(() => {
-                const taskIndex = storedTodo.indexOf(task);
-                if (taskIndex === -1) return;
-
-                if (editingIndex === taskIndex) {
-                    editingIndex = null;
-                    addbtn.textContent = "ADD";
-                    inputbox.value = "";
-                } else if (editingIndex !== null && editingIndex > taskIndex) {
-                    editingIndex--;
-                }
-
-                storedTodo.splice(taskIndex, 1);
-                saveToLocalStorage();
-                displayTodo();
-            }, 220);
-        }
+    const index = Number(button.dataset.index);
+    if (button.dataset.action === "delete") {
+        const task = storedTodo[index];
+        const row = button.closest("tr");
+        row.classList.add("is-removing");
+        row.querySelectorAll("button, input").forEach((control) => {
+            control.disabled = true;
+        });
+        window.setTimeout(() => {
+            const taskIndex = storedTodo.indexOf(task);
+            if (taskIndex === -1) return;
+            if (editingIndex === taskIndex) resetForm();
+            else if (editingIndex !== null && editingIndex > taskIndex) editingIndex -= 1;
+            storedTodo.splice(taskIndex, 1);
+            saveTodos();
+            displayTodo();
+        }, 220);
         return;
     }
 
-    // Edit task
-    if (e.target.classList.contains("edit-btn")) {
-        const index = Number(e.target.dataset.index);
-        if (!isNaN(index) && storedTodo[index]) {
-            editingIndex = index;
-            inputbox.value = storedTodo[index].text;
-            categorySelect.value = storedTodo[index].category || "Work";
-            addbtn.textContent = "Save";
-            inputbox.focus();
-        }
-        return;
-    }
+    const task = storedTodo[index];
+    editingIndex = index;
+    inputbox.value = task.text;
+    categorySelect.value = task.category;
+    dueDateInput.value = task.dueDate;
+    updateDueDateLabel();
+    setSelectedPriority(task.priority);
+    addbtn.textContent = "Save";
+    inputbox.focus();
 }
 
-// Event Listeners
-addbtn.addEventListener("click", handleAddtask);
-todolist.addEventListener("click", handleListAction);
-searchInput.addEventListener("input", displayTodo);
+function setTheme(isDark) {
+    document.documentElement.dataset.theme = isDark ? "dark" : "light";
+    themeToggle.textContent = isDark ? "Light mode" : "Dark mode";
+    themeToggle.setAttribute("aria-pressed", String(isDark));
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+}
 
-// Support pressing Enter key in the input box
-inputbox.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        handleAddtask();
+taskForm.addEventListener("submit", handleAddTask);
+todolist.addEventListener("click", handleTaskAction);
+searchInput.addEventListener("input", displayTodo);
+dueDateTrigger.addEventListener("click", () => {
+    if (!calendarPopover.hidden) {
+        closeCalendar();
+        return;
     }
+
+    const selectedDate = parseISODate(dueDateInput.value);
+    visibleMonth = selectedDate
+        ? new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
+        : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    renderCalendar();
+    calendarPopover.hidden = false;
+    dueDateTrigger.setAttribute("aria-expanded", "true");
+});
+calendarDays.addEventListener("click", (event) => {
+    const dayButton = event.target.closest("button[data-date]");
+    if (!dayButton) return;
+
+    dueDateInput.value = dayButton.dataset.date;
+    updateDueDateLabel();
+    closeCalendar(true);
+});
+calendarDays.addEventListener("keydown", (event) => {
+    const movement = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[event.key];
+    const focusedDay = event.target.closest("button[data-date]");
+    if (!movement || !focusedDay) return;
+
+    event.preventDefault();
+    const nextDate = parseISODate(focusedDay.dataset.date);
+    nextDate.setDate(nextDate.getDate() + movement);
+    if (nextDate.getMonth() !== visibleMonth.getMonth() || nextDate.getFullYear() !== visibleMonth.getFullYear()) {
+        visibleMonth = new Date(nextDate.getFullYear(), nextDate.getMonth(), 1);
+        renderCalendar();
+    }
+    calendarDays.querySelector(`[data-date="${toISODate(nextDate)}"]`)?.focus();
+});
+document.getElementById("calendar-previous").addEventListener("click", () => changeCalendarMonth(-1));
+document.getElementById("calendar-next").addEventListener("click", () => changeCalendarMonth(1));
+document.getElementById("calendar-clear").addEventListener("click", () => {
+    dueDateInput.value = "";
+    updateDueDateLabel();
+    closeCalendar(true);
+});
+document.getElementById("calendar-today").addEventListener("click", () => {
+    dueDateInput.value = toISODate(new Date());
+    updateDueDateLabel();
+    closeCalendar(true);
+});
+document.addEventListener("click", (event) => {
+    if (!event.target.closest(".due-date-field")) closeCalendar();
+});
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !calendarPopover.hidden) closeCalendar(true);
+});
+themeToggle.addEventListener("click", () => {
+    setTheme(document.documentElement.dataset.theme !== "dark");
 });
 
-// Initial display on page load
+setTheme(localStorage.getItem("theme") === "dark");
+updateDueDateLabel();
 displayTodo();

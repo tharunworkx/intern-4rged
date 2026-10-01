@@ -1,45 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TODO List</title>
+    <title>TODO list</title>
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
+    <header id="input-container">
+        <h1>TODO list</h1>
+        <button id="theme-toggle" type="button" aria-pressed="false">Dark mode</button>
+    </header>
 
-    <div id="input-container">
-        <h3>TODO list</h3>
-        <section id="inner_cont">
-            <input id="input" placeholder="Enter a task...">
-            <select id="category-select">
-                <option value="Work">Work</option>
-                <option value="Personal">Personal</option>
-                <option value="Urgent">Urgent</option>
-            </select>
-            <button id="addbtn">ADD</button>
+    <main>
+        <form id="task-form">
+            <label class="task-field task-name" for="task-input">
+                <span>Task</span>
+                <input id="task-input" type="text" placeholder="What needs doing?" required>
+            </label>
+            <label class="task-field category-field" for="category-select">
+                <span>Category</span>
+                <select id="category-select">
+                    <option value="Work">Work</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Urgent">Urgent</option>
+                </select>
+            </label>
+            <div class="task-field due-date-field">
+                <span id="due-date-caption">Due date</span>
+                <input id="due-date" type="hidden">
+                <button id="due-date-trigger" type="button" aria-labelledby="due-date-caption due-date-label" aria-haspopup="dialog" aria-expanded="false" aria-controls="calendar-popover">
+                    <span id="due-date-label">Choose a date</span>
+                    <span class="calendar-mark" aria-hidden="true"><span>31</span></span>
+                </button>
+                <div id="calendar-popover" role="dialog" aria-label="Choose due date" hidden>
+                    <div class="calendar-header">
+                        <button id="calendar-previous" type="button" aria-label="Previous month">&lsaquo;</button>
+                        <h2 id="calendar-month"></h2>
+                        <button id="calendar-next" type="button" aria-label="Next month">&rsaquo;</button>
+                    </div>
+                    <div class="calendar-weekdays" aria-hidden="true">
+                        <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+                    </div>
+                    <div id="calendar-days" class="calendar-days" role="group" aria-label="Calendar days"></div>
+                    <div class="calendar-footer">
+                        <button id="calendar-clear" type="button">Clear</button>
+                        <button id="calendar-today" type="button">Today</button>
+                    </div>
+                </div>
+            </div>
+            <fieldset class="task-field priority-field">
+                <legend>Priority</legend>
+                <div class="priority-options">
+                    <label class="priority-choice priority-high">
+                        <input type="radio" name="priority" value="High">
+                        <span>High</span>
+                    </label>
+                    <label class="priority-choice priority-medium">
+                        <input type="radio" name="priority" value="Medium" checked>
+                        <span>Medium</span>
+                    </label>
+                    <label class="priority-choice priority-low">
+                        <input type="radio" name="priority" value="Low">
+                        <span>Low</span>
+                    </label>
+                </div>
+            </fieldset>
+            <button id="addbtn" type="submit">ADD</button>
+        </form>
+
+        <section id="progress-container" aria-label="Task progress">
+            <div class="progress-header">
+                <span class="progress-title">Task Progress</span>
+                <span id="progress-stats">0% Completed (0/0)</span>
+            </div>
+            <div class="progress-track"><div id="progress-bar"></div></div>
         </section>
-    </div>
 
-    <!-- Progress bar section -->
-    <div id="progress-container">
-        <div class="progress-header">
-            <span class="progress-title">Task Progress</span>
-            <span id="progress-stats">0% Completed (0/0)</span>
-        </div>
-        <div class="progress-track">
-            <div id="progress-bar"></div>
-        </div>
-    </div>
-
-    <div id="todo-container">
-        <div class="filter-bar">
-            <input id="search-input" type="search" placeholder="Search tasks..." aria-label="Search tasks">
-        </div>
-        <ul>
-           
-        </ul>
-    </div>
+        <section id="todo-container" aria-label="Tasks">
+            <div class="filter-bar">
+                <input id="search-input" type="search" placeholder="Search tasks..." aria-label="Search tasks by text, category, or priority">
+            </div>
+            <div class="task-table-wrap">
+                <table id="todo-table">
+                    <caption class="visually-hidden">Saved tasks with their categories, due dates, priorities, and status</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Task</th>
+                            <th scope="col">Category</th>
+                            <th scope="col">Due date</th>
+                            <th scope="col">Priority</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody aria-live="polite"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
 
     <script src="./script.js"></script>
 </body>
