@@ -83,6 +83,11 @@
             <div class="filter-bar">
                 <label class="visually-hidden" for="search-input">Search tasks</label>
                 <input id="search-input" type="search" placeholder="Search tasks..." autocomplete="off">
+                <div class="task-view-filters" role="group" aria-label="Filter tasks">
+                    <button class="task-view-filter is-active" type="button" data-filter="all" aria-pressed="true">All</button>
+                    <button class="task-view-filter" type="button" data-filter="active" aria-pressed="false">Active</button>
+                    <button class="task-view-filter" type="button" data-filter="completed" aria-pressed="false">Completed</button>
+                </div>
             </div>
             <div class="task-table-wrap">
                 <table id="todo-table">

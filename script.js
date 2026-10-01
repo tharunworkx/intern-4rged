@@ -29,6 +29,7 @@ let editingIndex = null;
 const currentDate = new Date();
 let visibleMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
 let taskToAnimate = null;
+let taskFilter = "all";
 
 function toISODate(date) {
     const year = date.getFullYear();
@@ -185,14 +186,24 @@ function displayTodo() {
     const query = searchInput.value.trim().toLowerCase();
     const visibleTasks = storedTodo
         .map((task, index) => ({ task, index }))
-        .filter(({ task }) => `${task.text} ${task.category}`.toLowerCase().includes(query));
+        .filter(({ task }) => {
+            const matchesQuery = `${task.text} ${task.category}`.toLowerCase().includes(query);
+            const matchesView = taskFilter === "all"
+                || (taskFilter === "active" && !task.completed)
+                || (taskFilter === "completed" && task.completed);
+            return matchesQuery && matchesView;
+        });
 
     if (visibleTasks.length === 0) {
         const emptyRow = document.createElement("tr");
         const emptyCell = document.createElement("td");
         emptyCell.colSpan = 7;
         emptyCell.className = "empty-tasks";
-        emptyCell.textContent = query ? "No tasks match your search." : "Your tasks will appear here.";
+        emptyCell.textContent = query
+            ? "No tasks match your search."
+            : taskFilter === "all"
+                ? "Your tasks will appear here."
+                : `No ${taskFilter} tasks.`;
         emptyRow.append(emptyCell);
         todolist.append(emptyRow);
         taskToAnimate = null;
@@ -354,6 +365,17 @@ taskForm.addEventListener("submit", handleAddTask);
 todolist.addEventListener("click", handleTaskAction);
 todolist.addEventListener("change", handleTaskAction);
 searchInput.addEventListener("input", displayTodo);
+document.querySelectorAll(".task-view-filter").forEach((button) => {
+    button.addEventListener("click", () => {
+        taskFilter = button.dataset.filter;
+        document.querySelectorAll(".task-view-filter").forEach((filterButton) => {
+            const isActive = filterButton === button;
+            filterButton.classList.toggle("is-active", isActive);
+            filterButton.setAttribute("aria-pressed", String(isActive));
+        });
+        displayTodo();
+    });
+});
 dueDateTrigger.addEventListener("click", () => {
     if (!calendarPopover.hidden) {
         closeCalendar();
