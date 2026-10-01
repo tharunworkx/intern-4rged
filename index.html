@@ -136,7 +136,11 @@
                     <tbody aria-live="polite"></tbody>
                 </table>
             </div>
-            <p id="filter-empty-state" class="filter-empty-state" role="status" hidden>No tasks match these filters.</p>
+            <div id="filter-empty-state" class="filter-empty-state" role="status" aria-live="polite" hidden>
+                <span class="empty-state-icon"><i id="empty-state-icon" class="fa-solid fa-clipboard-list" aria-hidden="true"></i></span>
+                <h3 id="empty-state-title">Your list is clear</h3>
+                <p id="empty-state-message">Add a task to get started.</p>
+            </div>
         </section>
         </main>
     </div>

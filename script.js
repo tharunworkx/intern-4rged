@@ -29,6 +29,9 @@ const filterButtons = document.querySelectorAll(".filter-btn");
 const sectionHeading = document.getElementById("section-heading-text");
 const taskCount = document.getElementById("task-count");
 const filterEmptyState = document.getElementById("filter-empty-state");
+const emptyStateIcon = document.getElementById("empty-state-icon");
+const emptyStateTitle = document.getElementById("empty-state-title");
+const emptyStateMessage = document.getElementById("empty-state-message");
 let editingIndex = null;
 let taskToAnimate = null;
 let currentFilter = "all";
@@ -190,15 +193,9 @@ function displayTodo() {
             .some((value) => value.toLowerCase().includes(query)));
 
     if (visibleTasks.length === 0) {
-        const emptyRow = document.createElement("tr");
-        const emptyCell = document.createElement("td");
-        emptyCell.colSpan = 7;
-        emptyCell.className = "empty-tasks";
-        emptyCell.textContent = query ? "No tasks match your search." : "Your tasks will appear here.";
-        emptyRow.append(emptyCell);
-        todolist.append(emptyRow);
         taskToAnimate = null;
         updateProgress();
+        applyStatusFilter();
         return;
     }
 
@@ -365,7 +362,43 @@ function applyStatusFilter() {
     };
     sectionHeading.textContent = headingByFilter[currentFilter];
     taskCount.textContent = `${visibleCount} ${visibleCount === 1 ? "task" : "tasks"}`;
-    filterEmptyState.hidden = rows.length === 0 || visibleCount > 0 || query.length > 0;
+    let emptyState;
+    if (query) {
+        emptyState = {
+            icon: "fa-magnifying-glass",
+            title: "No matches found",
+            message: `Nothing matched \"${searchInput.value.trim()}\". Try another search.`
+        };
+    } else if (currentFilter === "active" && storedTodo.length > 0) {
+        emptyState = {
+            icon: "fa-circle-check",
+            title: "All caught up",
+            message: "Completed tasks are out of your active list."
+        };
+    } else if (currentFilter === "completed") {
+        emptyState = {
+            icon: "fa-clipboard-check",
+            title: "Nothing completed yet",
+            message: "Tasks you complete will be collected here."
+        };
+    } else if (currentFilter === "active") {
+        emptyState = {
+            icon: "fa-list-check",
+            title: "No active tasks yet",
+            message: "Add a task to see it here."
+        };
+    } else {
+        emptyState = {
+            icon: "fa-clipboard-list",
+            title: "Your list is clear",
+            message: "Add a task to get started."
+        };
+    }
+
+    emptyStateIcon.className = `fa-solid ${emptyState.icon}`;
+    emptyStateTitle.textContent = emptyState.title;
+    emptyStateMessage.textContent = emptyState.message;
+    filterEmptyState.hidden = visibleCount > 0;
 }
 
 taskForm.addEventListener("submit", handleAddTask);
