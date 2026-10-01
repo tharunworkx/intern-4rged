@@ -916,6 +916,91 @@ main {
     text-align: center;
 }
 
+.empty-state {
+    display: grid;
+    place-items: center;
+    gap: 8px;
+    padding: 20px;
+}
+
+.empty-state-icon {
+    color: var(--accent);
+    font-size: 28px;
+}
+
+.empty-state p {
+    margin: 0;
+}
+
+.delete-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(17, 24, 39, 0.48);
+}
+
+.delete-modal[hidden] {
+    display: none;
+}
+
+.delete-modal-box {
+    width: min(100%, 340px);
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+.delete-modal-box h2 {
+    margin-bottom: 8px;
+    color: var(--text);
+    font-size: 20px;
+}
+
+.delete-modal-box p {
+    margin-bottom: 18px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.delete-modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.modal-btn {
+    min-width: 82px;
+    height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.modal-cancel-btn:hover {
+    background: var(--field);
+}
+
+.modal-delete-btn {
+    border-color: #d94f4f;
+    background: #d94f4f;
+    color: #ffffff;
+}
+
+.modal-delete-btn:hover {
+    background: #c13e3e;
+}
+
 @media (max-width: 700px) {
     #todo-table {
         min-width: 640px;

@@ -26,11 +26,15 @@ const progressBar = document.getElementById("progress-bar");
 const progressStats = document.getElementById("progress-stats");
 const progressTrack = document.querySelector(".progress-track");
 const quickAddButton = document.getElementById("quick-add-btn");
+const deleteModal = document.getElementById("delete-modal");
+const cancelDeleteButton = document.getElementById("cancel-delete");
+const confirmDeleteButton = document.getElementById("confirm-delete");
 let editingIndex = null;
 const currentDate = new Date();
 let visibleMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
 let taskToAnimate = null;
 let taskFilter = "all";
+let pendingDeleteIndex = null;
 
 function toISODate(date) {
     const year = date.getFullYear();
@@ -198,13 +202,21 @@ function displayTodo() {
     if (visibleTasks.length === 0) {
         const emptyRow = document.createElement("tr");
         const emptyCell = document.createElement("td");
+        const emptyState = document.createElement("div");
+        const emptyIcon = document.createElement("i");
+        const emptyMessage = document.createElement("p");
         emptyCell.colSpan = 7;
         emptyCell.className = "empty-tasks";
-        emptyCell.textContent = query
+        emptyState.className = "empty-state";
+        emptyIcon.className = "fa-regular fa-face-smile empty-state-icon";
+        emptyIcon.setAttribute("aria-hidden", "true");
+        emptyMessage.textContent = query
             ? "No tasks match your search."
             : taskFilter === "all"
                 ? "Your tasks will appear here."
                 : `No ${taskFilter} tasks.`;
+        emptyState.append(emptyIcon, emptyMessage);
+        emptyCell.append(emptyState);
         emptyRow.append(emptyCell);
         todolist.append(emptyRow);
         taskToAnimate = null;
@@ -301,6 +313,42 @@ function displayTodo() {
     updateProgress();
 }
 
+function openDeleteModal(index) {
+    pendingDeleteIndex = index;
+    deleteModal.hidden = false;
+    confirmDeleteButton.focus();
+}
+
+function closeDeleteModal() {
+    pendingDeleteIndex = null;
+    deleteModal.hidden = true;
+}
+
+function deleteTask(index) {
+    const task = storedTodo[index];
+    const row = todolist.querySelector(`button[data-action="delete"][data-index="${index}"]`)?.closest("tr");
+    if (!task || !row) return;
+
+    row.classList.add("is-removing");
+    row.querySelectorAll("button, input").forEach((control) => {
+        control.disabled = true;
+    });
+    window.setTimeout(() => {
+        const taskIndex = storedTodo.indexOf(task);
+        if (taskIndex === -1) return;
+
+        if (editingIndex === taskIndex) {
+            resetForm();
+        } else if (editingIndex !== null && editingIndex > taskIndex) {
+            editingIndex -= 1;
+        }
+
+        storedTodo.splice(taskIndex, 1);
+        saveTodos();
+        displayTodo();
+    }, 220);
+}
+
 function handleTaskAction(event) {
     const checkbox = event.target.closest(".task-checkbox");
     if (checkbox) {
@@ -319,28 +367,7 @@ function handleTaskAction(event) {
 
     const index = Number(button.dataset.index);
     if (button.dataset.action === "delete") {
-        const task = storedTodo[index];
-        const row = button.closest("tr");
-        if (!task || !row) return;
-
-        row.classList.add("is-removing");
-        row.querySelectorAll("button, input").forEach((control) => {
-            control.disabled = true;
-        });
-        window.setTimeout(() => {
-            const taskIndex = storedTodo.indexOf(task);
-            if (taskIndex === -1) return;
-
-            if (editingIndex === taskIndex) {
-                resetForm();
-            } else if (editingIndex !== null && editingIndex > taskIndex) {
-                editingIndex -= 1;
-            }
-
-            storedTodo.splice(taskIndex, 1);
-            saveTodos();
-            displayTodo();
-        }, 220);
+        openDeleteModal(index);
         return;
     }
 
@@ -365,6 +392,15 @@ function setTheme(isDark) {
 taskForm.addEventListener("submit", handleAddTask);
 todolist.addEventListener("click", handleTaskAction);
 todolist.addEventListener("change", handleTaskAction);
+cancelDeleteButton.addEventListener("click", closeDeleteModal);
+confirmDeleteButton.addEventListener("click", () => {
+    const index = pendingDeleteIndex;
+    closeDeleteModal();
+    if (index !== null) deleteTask(index);
+});
+deleteModal.addEventListener("click", (event) => {
+    if (event.target === deleteModal) closeDeleteModal();
+});
 searchInput.addEventListener("input", displayTodo);
 document.querySelectorAll(".task-view-filter").forEach((button) => {
     button.addEventListener("click", () => {
@@ -431,6 +467,7 @@ document.addEventListener("click", (event) => {
     if (!event.target.closest(".due-date-field")) closeCalendar();
 });
 document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !deleteModal.hidden) closeDeleteModal();
     if (event.key === "Escape" && !calendarPopover.hidden) closeCalendar(true);
 });
 themeToggle.addEventListener("click", () => {
