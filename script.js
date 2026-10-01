@@ -11,7 +11,6 @@ const dueDateLabel = document.getElementById("due-date-label");
 const calendarPopover = document.getElementById("calendar-popover");
 const calendarMonth = document.getElementById("calendar-month");
 const calendarDays = document.getElementById("calendar-days");
-const categorySelect = document.getElementById("category-select");
 const calendarDateFormatter = new Intl.DateTimeFormat(undefined, {
     month: "short",
     day: "numeric",
@@ -33,13 +32,16 @@ const filterEmptyState = document.getElementById("filter-empty-state");
 const emptyStateIcon = document.getElementById("empty-state-icon");
 const emptyStateTitle = document.getElementById("empty-state-title");
 const emptyStateMessage = document.getElementById("empty-state-message");
+const quickAddButton = document.getElementById("quick-add-btn");
+const deleteModal = document.getElementById("delete-modal");
+const cancelDeleteButton = document.getElementById("cancel-delete");
+const confirmDeleteButton = document.getElementById("confirm-delete");
 let editingIndex = null;
 let taskToAnimate = null;
 let currentFilter = "all";
 const currentDate = new Date();
 let visibleMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-let taskToAnimate = null;
-let taskFilter = "all";
+let pendingDeleteIndex = null;
 
 function toISODate(date) {
     const year = date.getFullYear();
@@ -170,9 +172,7 @@ function handleAddTask(event) {
         category: categorySelect.value,
         completed: editingIndex === null ? false : storedTodo[editingIndex].completed,
         dueDate: dueDateInput.value,
-        priority: getSelectedPriority(),
-        category: categorySelect.value,
-        completed: editingIndex === null ? false : storedTodo[editingIndex].completed
+        priority: getSelectedPriority()
     };
 
     if (!task.text) return;
@@ -216,7 +216,7 @@ function displayTodo() {
 
         const serialCell = document.createElement("td");
         serialCell.className = "row-number";
-        serialCell.textContent = String(rowIndex + 1);
+        serialCell.textContent = String(index + 1);
 
         const taskCell = document.createElement("td");
         taskCell.className = "task-cell";
@@ -291,8 +291,45 @@ function displayTodo() {
     updateProgress();
 }
 
+function openDeleteModal(index) {
+    pendingDeleteIndex = index;
+    deleteModal.hidden = false;
+    confirmDeleteButton.focus();
+}
+
+function closeDeleteModal() {
+    pendingDeleteIndex = null;
+    deleteModal.hidden = true;
+}
+
+function deleteTask(index) {
+    const task = storedTodo[index];
+    const row = todolist.querySelector(`button[data-action="delete"][data-index="${index}"]`)?.closest("tr");
+    if (!task || !row) return;
+
+    row.classList.add("is-removing");
+    row.querySelectorAll("button, input").forEach((control) => {
+        control.disabled = true;
+    });
+    window.setTimeout(() => {
+        const taskIndex = storedTodo.indexOf(task);
+        if (taskIndex === -1) return;
+
+        if (editingIndex === taskIndex) {
+            resetForm();
+        } else if (editingIndex !== null && editingIndex > taskIndex) {
+            editingIndex -= 1;
+        }
+
+        storedTodo.splice(taskIndex, 1);
+        saveTodos();
+        displayTodo();
+    }, 220);
+}
+
 function handleTaskAction(event) {
     if (event.target.classList.contains("task-checkbox")) {
+        if (event.type !== "change") return;
         const index = Number(event.target.dataset.index);
         if (storedTodo[index]) {
             storedTodo[index].completed = event.target.checked;
@@ -307,21 +344,7 @@ function handleTaskAction(event) {
 
     const index = Number(button.dataset.index);
     if (button.dataset.action === "delete") {
-        const task = storedTodo[index];
-        const row = button.closest("tr");
-        row.classList.add("is-removing");
-        row.querySelectorAll("button, input").forEach((control) => {
-            control.disabled = true;
-        });
-        window.setTimeout(() => {
-            const taskIndex = storedTodo.indexOf(task);
-            if (taskIndex === -1) return;
-            if (editingIndex === taskIndex) resetForm();
-            else if (editingIndex !== null && editingIndex > taskIndex) editingIndex -= 1;
-            storedTodo.splice(taskIndex, 1);
-            saveTodos();
-            displayTodo();
-        }, 220);
+        openDeleteModal(index);
         return;
     }
 
@@ -338,10 +361,10 @@ function handleTaskAction(event) {
 
 function setTheme(isDark) {
     document.documentElement.dataset.theme = isDark ? "dark" : "light";
-    const nextModeLabel = isDark ? "Switch to light mode" : "Switch to dark mode";
-    themeIcon.className = isDark ? "fa-solid fa-moon" : "fa-solid fa-sun";
-    themeToggle.setAttribute("aria-label", nextModeLabel);
-    themeToggle.title = nextModeLabel;
+    const nextTheme = isDark ? "light" : "dark";
+    themeIcon.className = isDark ? "fa-solid fa-sun" : "fa-solid fa-moon";
+    themeToggle.setAttribute("aria-label", `Switch to ${nextTheme} mode`);
+    themeToggle.title = `Switch to ${nextTheme} mode`;
     themeToggle.setAttribute("aria-pressed", String(isDark));
     localStorage.setItem("theme", isDark ? "dark" : "light");
 }
@@ -408,6 +431,20 @@ function applyStatusFilter() {
 
 taskForm.addEventListener("submit", handleAddTask);
 todolist.addEventListener("click", handleTaskAction);
+todolist.addEventListener("change", handleTaskAction);
+cancelDeleteButton.addEventListener("click", closeDeleteModal);
+confirmDeleteButton.addEventListener("click", () => {
+    const index = pendingDeleteIndex;
+    closeDeleteModal();
+    if (index !== null) deleteTask(index);
+});
+deleteModal.addEventListener("click", (event) => {
+    if (event.target === deleteModal) closeDeleteModal();
+});
+quickAddButton.addEventListener("click", () => {
+    taskForm.scrollIntoView({ behavior: "smooth", block: "center" });
+    inputbox.focus({ preventScroll: true });
+});
 searchInput.addEventListener("input", displayTodo);
 filterButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -473,6 +510,7 @@ document.addEventListener("click", (event) => {
     if (!event.target.closest(".due-date-field")) closeCalendar();
 });
 document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !deleteModal.hidden) closeDeleteModal();
     if (event.key === "Escape" && !calendarPopover.hidden) closeCalendar(true);
 });
 themeToggle.addEventListener("click", () => {
