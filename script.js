@@ -21,11 +21,17 @@ const taskForm = document.getElementById("task-form");
 const addbtn = document.getElementById("addbtn");
 const todolist = document.querySelector("#todo-table tbody");
 const themeToggle = document.getElementById("theme-toggle");
+const themeIcon = document.getElementById("theme-icon");
 const searchInput = document.getElementById("search-input");
 const progressBar = document.getElementById("progress-bar");
 const progressStats = document.getElementById("progress-stats");
+const filterButtons = document.querySelectorAll(".filter-btn");
+const sectionHeading = document.getElementById("section-heading-text");
+const taskCount = document.getElementById("task-count");
+const filterEmptyState = document.getElementById("filter-empty-state");
 let editingIndex = null;
 let taskToAnimate = null;
+let currentFilter = "all";
 const currentDate = new Date();
 let visibleMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
 
@@ -330,14 +336,53 @@ function handleTaskAction(event) {
 
 function setTheme(isDark) {
     document.documentElement.dataset.theme = isDark ? "dark" : "light";
-    themeToggle.textContent = isDark ? "Light mode" : "Dark mode";
+    const nextModeLabel = isDark ? "Switch to light mode" : "Switch to dark mode";
+    themeIcon.className = isDark ? "fa-solid fa-moon" : "fa-solid fa-sun";
+    themeToggle.setAttribute("aria-label", nextModeLabel);
+    themeToggle.title = nextModeLabel;
     themeToggle.setAttribute("aria-pressed", String(isDark));
     localStorage.setItem("theme", isDark ? "dark" : "light");
+}
+
+function applyStatusFilter() {
+    const query = searchInput.value.trim().toLowerCase();
+    const rows = Array.from(todolist.querySelectorAll("tr.task-row"));
+    let visibleCount = 0;
+
+    rows.forEach((row) => {
+        const completed = Boolean(row.querySelector(".task-checkbox")?.checked);
+        const matchesFilter = currentFilter === "all"
+            || (currentFilter === "completed" ? completed : !completed);
+        const matchesSearch = row.textContent.toLowerCase().includes(query);
+        row.hidden = !matchesFilter || !matchesSearch;
+        if (!row.hidden) visibleCount += 1;
+    });
+
+    const headingByFilter = {
+        all: "Task Items",
+        active: "Active Tasks",
+        completed: "Completed Tasks"
+    };
+    sectionHeading.textContent = headingByFilter[currentFilter];
+    taskCount.textContent = `${visibleCount} ${visibleCount === 1 ? "task" : "tasks"}`;
+    filterEmptyState.hidden = rows.length === 0 || visibleCount > 0 || query.length > 0;
 }
 
 taskForm.addEventListener("submit", handleAddTask);
 todolist.addEventListener("click", handleTaskAction);
 searchInput.addEventListener("input", displayTodo);
+filterButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+        currentFilter = button.dataset.filter;
+        filterButtons.forEach((filterButton) => {
+            const isActive = filterButton.dataset.filter === currentFilter;
+            filterButton.classList.toggle("active", isActive);
+            filterButton.setAttribute("aria-pressed", String(isActive));
+        });
+        applyStatusFilter();
+    });
+});
+new MutationObserver(applyStatusFilter).observe(todolist, { childList: true });
 dueDateTrigger.addEventListener("click", () => {
     if (!calendarPopover.hidden) {
         closeCalendar();
