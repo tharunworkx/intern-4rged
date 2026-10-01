@@ -73,6 +73,22 @@ function ensureEverDoLayout() {
                     </div>
                 </main>
             </div>
+            <!-- Confirmation Modal on Delete -->
+            <div id="delete-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+                <div class="modal-card">
+                    <div class="modal-icon-wrap">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </div>
+                    <h3 id="modal-title" class="modal-title">Are you sure?</h3>
+                    <p class="modal-desc">Do you really want to delete this task? This action cannot be undone.</p>
+                    <div class="modal-actions">
+                        <button id="cancel-delete-btn" class="modal-btn cancel-btn">Cancel</button>
+                        <button id="confirm-delete-btn" class="modal-btn confirm-delete-btn">
+                            <i class="fa-solid fa-trash-can"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
         `;
     }
     updateBranding();
@@ -256,7 +272,7 @@ function handleUpdate(e) {
         return;
     }
 
-    // 2. Delete Task -> Open Custom UI Confirmation Modal
+    // 2. Delete Task -> Open Custom In-App Modal (NEVER browser alert)
     if (e.target.classList.contains("delete-btn") || e.target.closest(".delete-btn")) {
         openDeleteModal(index);
         return;
@@ -297,7 +313,7 @@ if (quickAddBtn) {
     });
 }
 
-// Modal Action Listeners
+// Modal Action Listeners (Custom UI Confirmation Modal)
 if (confirmDeleteBtn) {
     confirmDeleteBtn.addEventListener("click", confirmDeleteTask);
 }
