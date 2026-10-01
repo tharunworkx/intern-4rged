@@ -7,93 +7,6 @@ function updateBranding() {
     document.title = "4rged Todo";
 }
 
-// Auto-Construct 4rged Todo UI if missing from static HTML
-function ensureEverDoLayout() {
-    if (!document.querySelector(".window-container")) {
-        document.body.innerHTML = `
-            <div class="window-container">
-                <aside class="sidebar">
-                    <div class="sidebar-top">
-                        <div class="sidebar-brand">
-                            <div class="brand-icon-box">
-                                <i class="fa-solid fa-layer-group"></i>
-                            </div>
-                            <div class="brand-details">
-                                <span class="brand-title">4rged</span>
-                                <span class="brand-subtitle">WORKSPACE</span>
-                            </div>
-                        </div>
-                    </div>
-                    <nav class="sidebar-nav">
-                        <button class="nav-item filter-btn active" data-filter="all">
-                            <i class="fa-solid fa-inbox"></i>
-                            <span>All Tasks</span>
-                        </button>
-                        <button class="nav-item filter-btn" data-filter="active">
-                            <i class="fa-regular fa-circle-dot"></i>
-                            <span>Active</span>
-                        </button>
-                        <button class="nav-item filter-btn" data-filter="completed">
-                            <i class="fa-solid fa-circle-check"></i>
-                            <span>Completed</span>
-                        </button>
-                    </nav>
-                    <div class="sidebar-bottom">
-                        <button id="quick-add-btn" class="floating-add-btn" title="Add New Task">
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
-                    </div>
-                </aside>
-                <main class="main-content">
-                    <header class="content-header">
-                        <div class="header-titles">
-                            <span class="sub-badge">4rged — MVP</span>
-                            <h1 class="main-title">4rged Todo</h1>
-                        </div>
-                        <div id="filter-container" class="top-filter-pills">
-                            <button class="filter-btn active" data-filter="all">All</button>
-                            <button class="filter-btn" data-filter="active">Active</button>
-                            <button class="filter-btn" data-filter="completed">Completed</button>
-                        </div>
-                    </header>
-                    <div id="input-container">
-                        <section id="inner_cont">
-                            <div class="input-field-box">
-                                <i class="fa-solid fa-pen-to-square input-icon"></i>
-                                <input id="input" placeholder="Enter a new task..." autocomplete="off">
-                            </div>
-                            <button id="addbtn">ADD</button>
-                        </section>
-                    </div>
-                    <div class="section-heading">
-                        <h2 id="section-heading-text">Task Items</h2>
-                    </div>
-                    <div id="todo-container">
-                        <ul id="task-list"></ul>
-                    </div>
-                </main>
-            </div>
-            <!-- Confirmation Modal on Delete -->
-            <div id="delete-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-                <div class="modal-card">
-                    <div class="modal-icon-wrap">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </div>
-                    <h3 id="modal-title" class="modal-title">Are you sure?</h3>
-                    <p class="modal-desc">Do you really want to delete this task? This action cannot be undone.</p>
-                    <div class="modal-actions">
-                        <button id="cancel-delete-btn" class="modal-btn cancel-btn">Cancel</button>
-                        <button id="confirm-delete-btn" class="modal-btn confirm-delete-btn">
-                            <i class="fa-solid fa-trash-can"></i> Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    updateBranding();
-}
-
 // Ensure Font Awesome & Fonts are present
 if (!document.querySelector("link[href*='font-awesome']")) {
     const fa = document.createElement("link");
@@ -102,8 +15,6 @@ if (!document.querySelector("link[href*='font-awesome']")) {
     document.head.appendChild(fa);
 }
 
-ensureEverDoLayout();
-
 // DOM Element References
 const inputbox = document.querySelector("#input");
 const addbtn = document.getElementById("addbtn");
@@ -111,7 +22,7 @@ const todolist = document.querySelector("#task-list") || document.querySelector(
 const filterBtns = document.querySelectorAll(".filter-btn");
 const quickAddBtn = document.getElementById("quick-add-btn");
 
-// Modal Elements (Custom Confirmation Modal)
+// Modal Elements (In-App Centered UI Confirmation Modal)
 const deleteModal = document.getElementById("delete-modal");
 const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
 const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
@@ -219,7 +130,7 @@ function displayTodo() {
     }
 }
 
-// Open Delete Confirmation Modal
+// Open Delete Confirmation Modal (In-App UI Format)
 function openDeleteModal(index) {
     taskToDeleteIndex = index;
     if (deleteModal) {
@@ -272,7 +183,7 @@ function handleUpdate(e) {
         return;
     }
 
-    // 2. Delete Task -> Open Custom In-App Modal (NEVER browser alert)
+    // 2. Delete Task -> Open Custom In-App Modal (NO browser alert)
     if (e.target.classList.contains("delete-btn") || e.target.closest(".delete-btn")) {
         openDeleteModal(index);
         return;
