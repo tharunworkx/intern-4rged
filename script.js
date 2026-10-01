@@ -95,12 +95,10 @@ const todolist = document.querySelector("#task-list") || document.querySelector(
 const filterBtns = document.querySelectorAll(".filter-btn");
 const quickAddBtn = document.getElementById("quick-add-btn");
 
-// Modal Elements (Feature 2: Delete Action UI Format)
+// Modal Elements (Custom Confirmation Modal)
 const deleteModal = document.getElementById("delete-modal");
 const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
 const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
-const closeModalX = document.getElementById("close-modal-x");
-const deleteTaskPreviewText = document.getElementById("delete-task-preview-text");
 
 let editingIndex = null;
 let currentFilter = "all";
@@ -205,12 +203,9 @@ function displayTodo() {
     }
 }
 
-// Open Delete Confirmation Modal (UI Format)
+// Open Delete Confirmation Modal
 function openDeleteModal(index) {
     taskToDeleteIndex = index;
-    if (storedTodo[index] && deleteTaskPreviewText) {
-        deleteTaskPreviewText.textContent = `"${storedTodo[index].text}"`;
-    }
     if (deleteModal) {
         deleteModal.classList.remove("hidden");
     }
@@ -261,7 +256,7 @@ function handleUpdate(e) {
         return;
     }
 
-    // 2. Delete Task -> Open Custom Delete Action Modal
+    // 2. Delete Task -> Open Custom UI Confirmation Modal
     if (e.target.classList.contains("delete-btn") || e.target.closest(".delete-btn")) {
         openDeleteModal(index);
         return;
@@ -302,15 +297,12 @@ if (quickAddBtn) {
     });
 }
 
-// Modal Action Listeners (Feature 2)
+// Modal Action Listeners
 if (confirmDeleteBtn) {
     confirmDeleteBtn.addEventListener("click", confirmDeleteTask);
 }
 if (cancelDeleteBtn) {
     cancelDeleteBtn.addEventListener("click", closeDeleteModal);
-}
-if (closeModalX) {
-    closeModalX.addEventListener("click", closeDeleteModal);
 }
 if (deleteModal) {
     deleteModal.addEventListener("click", (e) => {
@@ -320,7 +312,7 @@ if (deleteModal) {
     });
 }
 
-// Keyboard shortcuts (Escape closes modal)
+// Keyboard shortcut (Escape key closes modal)
 document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && deleteModal && !deleteModal.classList.contains("hidden")) {
         closeDeleteModal();
