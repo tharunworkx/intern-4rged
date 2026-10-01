@@ -4,46 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>4rged Todo</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <div class="app-shell">
-        <header class="topbar">
-            <div class="title-wrap">
-                <span class="eyebrow">4rged • MVP</span>
-                <h1>Todo Board</h1>
-            </div>
-            <label class="search-wrap" aria-label="Search tasks">
-                <span class="search-icon">⌕</span>
-                <input id="search-input" type="search" placeholder="Search tasks...">
-            </label>
-        </header>
 
-        <section class="toolbar">
-            <div class="input-group">
-                <input id="input" type="text" placeholder="Enter a task..." aria-label="Task name">
-                <select id="category-select" aria-label="Task category">
-                    <option value="Work">Work</option>
-                    <option value="Personal">Personal</option>
-                    <option value="Urgent">Urgent</option>
-                </select>
-                <button id="addbtn" type="button">ADD</button>
+    <!-- Main Full Screen Container -->
+    <div class="window-container">
+        
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
+            <!-- App Brand Logo Header (Replacing macOS dots) -->
+            <div class="sidebar-top">
+                <div class="sidebar-brand">
+                    <div class="brand-icon-box">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div class="brand-details">
+                        <span class="brand-title">4rged</span>
+                        <span class="brand-subtitle">WORKSPACE</span>
+                    </div>
+                </div>
             </div>
-            <button id="clear-completed" class="secondary-btn" type="button">Clear Completed</button>
-        </section>
 
-        <section id="progress-container" aria-live="polite">
-            <div class="progress-header">
-                <span class="progress-title">Task Progress</span>
-                <span id="progress-stats">0% Completed (0/0)</span>
-            </div>
-            <div class="progress-track">
-                <div id="progress-bar"></div>
-            </div>
-        </section>
+            <!-- Navigation Filter Menu -->
+            <nav class="sidebar-nav">
+                <button class="nav-item filter-btn active" data-filter="all">
+                    <i class="fa-solid fa-inbox"></i>
+                    <span>All Tasks</span>
+                </button>
+                <button class="nav-item filter-btn" data-filter="active">
+                    <i class="fa-regular fa-circle-dot"></i>
+                    <span>Active</span>
+                </button>
+                <button class="nav-item filter-btn" data-filter="completed">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Completed</span>
+                </button>
+            </nav>
 
-        <main id="todo-container">
-            <ul id="task-list" aria-live="polite"></ul>
+            <!-- Sidebar Bottom Action -->
+            <div class="sidebar-bottom">
+                <button id="quick-add-btn" class="floating-add-btn" title="Add New Task">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Right Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Top Header Section -->
+            <header class="content-header">
+                <div class="header-titles">
+                    <span class="sub-badge">4rged — MVP</span>
+                    <h1 class="main-title">4rged Todo</h1>
+                </div>
+
+                <!-- Top Filter Pills -->
+                <div id="filter-container" class="top-filter-pills">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="active">Active</button>
+                    <button class="filter-btn" data-filter="completed">Completed</button>
+                </div>
+            </header>
+
+            <!-- Task Input Container -->
+            <div id="input-container">
+                <section id="inner_cont">
+                    <div class="input-field-box">
+                        <i class="fa-solid fa-pen-to-square input-icon"></i>
+                        <input id="input" placeholder="Enter a new task..." autocomplete="off">
+                    </div>
+                    <button id="addbtn">ADD</button>
+                </section>
+            </div>
+
+            <!-- Section Subheading -->
+            <div class="section-heading">
+                <h2 id="section-heading-text">Task Items</h2>
+            </div>
+
+            <!-- Todo Items Grid -->
+            <div id="todo-container">
+                <ul id="task-list">
+                    <!-- Tasks dynamically rendered here -->
+                </ul>
+            </div>
+
         </main>
     </div>
 

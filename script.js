@@ -1,236 +1,264 @@
-const inputbox = document.getElementById("input");
-const categorySelect = document.getElementById("category-select");
-const addbtn = document.getElementById("addbtn");
-const clearCompletedBtn = document.getElementById("clear-completed");
-const searchInput = document.getElementById("search-input");
-const todolist = document.getElementById("task-list");
-const progressBar = document.getElementById("progress-bar");
-const progressStats = document.getElementById("progress-stats");
+// ==========================================
+// 4RGED TODO — SCRIPT LOGIC (CLEAN & MINIMALIST)
+// ==========================================
 
-let editingIndex = null;
-let draggedIndex = null;
-
-function normalizeTodo(item) {
-    if (typeof item === "string") {
-        return { text: item, category: "Personal", completed: false };
-    }
-
-    return {
-        text: item.text || "",
-        category: item.category || "Personal",
-        completed: Boolean(item.completed)
-    };
+// Ensure dynamic title
+function updateBranding() {
+    document.title = "4rged Todo";
 }
 
-let storedTodo = (JSON.parse(localStorage.getItem("todos")) || []).map(normalizeTodo);
+// Auto-Construct 4rged Todo UI if missing from static HTML
+function ensureEverDoLayout() {
+    if (!document.querySelector(".window-container")) {
+        document.body.innerHTML = `
+            <div class="window-container">
+                <aside class="sidebar">
+                    <div class="sidebar-top">
+                        <div class="sidebar-brand">
+                            <div class="brand-icon-box">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </div>
+                            <div class="brand-details">
+                                <span class="brand-title">4rged</span>
+                                <span class="brand-subtitle">WORKSPACE</span>
+                            </div>
+                        </div>
+                    </div>
+                    <nav class="sidebar-nav">
+                        <button class="nav-item filter-btn active" data-filter="all">
+                            <i class="fa-solid fa-inbox"></i>
+                            <span>All Tasks</span>
+                        </button>
+                        <button class="nav-item filter-btn" data-filter="active">
+                            <i class="fa-regular fa-circle-dot"></i>
+                            <span>Active</span>
+                        </button>
+                        <button class="nav-item filter-btn" data-filter="completed">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Completed</span>
+                        </button>
+                    </nav>
+                    <div class="sidebar-bottom">
+                        <button id="quick-add-btn" class="floating-add-btn" title="Add New Task">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </aside>
+                <main class="main-content">
+                    <header class="content-header">
+                        <div class="header-titles">
+                            <span class="sub-badge">4rged — MVP</span>
+                            <h1 class="main-title">4rged Todo</h1>
+                        </div>
+                        <div id="filter-container" class="top-filter-pills">
+                            <button class="filter-btn active" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="active">Active</button>
+                            <button class="filter-btn" data-filter="completed">Completed</button>
+                        </div>
+                    </header>
+                    <div id="input-container">
+                        <section id="inner_cont">
+                            <div class="input-field-box">
+                                <i class="fa-solid fa-pen-to-square input-icon"></i>
+                                <input id="input" placeholder="Enter a new task..." autocomplete="off">
+                            </div>
+                            <button id="addbtn">ADD</button>
+                        </section>
+                    </div>
+                    <div class="section-heading">
+                        <h2 id="section-heading-text">Task Items</h2>
+                    </div>
+                    <div id="todo-container">
+                        <ul id="task-list"></ul>
+                    </div>
+                </main>
+            </div>
+        `;
+    }
+    updateBranding();
+}
 
-function saveToLocalStorage() {
+// Ensure Font Awesome & Fonts are present
+if (!document.querySelector("link[href*='font-awesome']")) {
+    const fa = document.createElement("link");
+    fa.rel = "stylesheet";
+    fa.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css";
+    document.head.appendChild(fa);
+}
+
+ensureEverDoLayout();
+
+// DOM Element References
+const inputbox = document.querySelector("#input");
+const addbtn = document.getElementById("addbtn");
+const todolist = document.querySelector("#task-list") || document.querySelector("ul");
+const filterBtns = document.querySelectorAll(".filter-btn");
+const quickAddBtn = document.getElementById("quick-add-btn");
+
+let editingIndex = null;
+let currentFilter = "all";
+
+// Load stored todos with backward compatibility
+function getStoredTodos() {
+    try {
+        let raw = JSON.parse(localStorage.getItem("todos")) || [];
+        return raw.map(item => {
+            if (typeof item === "string") {
+                return { text: item, completed: false };
+            }
+            return {
+                text: item.text || "",
+                completed: Boolean(item.completed)
+            };
+        });
+    } catch (e) {
+        return [];
+    }
+}
+
+let storedTodo = getStoredTodos();
+
+function saveTodos() {
     localStorage.setItem("todos", JSON.stringify(storedTodo));
 }
 
-function escapeHtml(str) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
-}
+// Initial standardize
+saveTodos();
 
-function updateProgress() {
-    const total = storedTodo.length;
-    const completed = storedTodo.filter(task => task.completed).length;
-    const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+// Handle Add / Edit Task
+function handleAddtask() {
+    const textVal = inputbox.value.trim();
+    if (textVal.length === 0) return;
 
-    if (progressBar) {
-        progressBar.style.width = `${percentage}%`;
+    if (addbtn.innerHTML.includes("Save") && editingIndex !== null) {
+        storedTodo[editingIndex].text = textVal;
+        addbtn.innerHTML = "ADD";
+        editingIndex = null;
+    } else {
+        storedTodo.push({ text: textVal, completed: false });
     }
 
-    if (progressStats) {
-        progressStats.textContent = `${percentage}% Completed (${completed}/${total})`;
-    }
+    saveTodos();
+    inputbox.value = "";
+    displayTodo();
 }
 
-function renderTodoList() {
+// Display Todos with Clearly Defined Boxes
+function displayTodo() {
     todolist.innerHTML = "";
-    const query = searchInput.value.trim().toLowerCase();
 
-    const visibleTodos = storedTodo.filter(task => {
-        if (!query) return true;
-        return task.text.toLowerCase().includes(query) || task.category.toLowerCase().includes(query);
-    });
+    storedTodo.forEach((task, index) => {
+        // Filter logic: All / Active / Completed
+        if (currentFilter === "active" && task.completed) return;
+        if (currentFilter === "completed" && !task.completed) return;
 
-    if (visibleTodos.length === 0) {
-        const emptyItem = document.createElement("li");
-        emptyItem.className = "empty-state";
-        emptyItem.textContent = "No tasks match your search.";
-        todolist.appendChild(emptyItem);
-        updateProgress();
-        return;
-    }
-
-    visibleTodos.forEach((task) => {
-        const realIndex = storedTodo.indexOf(task);
+        const isDone = task.completed;
         const list = document.createElement("li");
-        list.dataset.index = String(realIndex);
-        list.draggable = true;
-
-        if (task.completed) {
+        list.setAttribute("data-index", index);
+        if (isDone) {
             list.classList.add("completed");
         }
 
-        const categoryClass = `tag-${(task.category || "Personal").toLowerCase()}`;
+        const statusBadge = isDone 
+            ? `<span class="status-badge completed-badge"><i class="fa-solid fa-check"></i> Done</span>`
+            : `<span class="status-badge active-badge"><i class="fa-regular fa-circle-dot"></i> Active</span>`;
 
         list.innerHTML = `
-            <div class="card-header">
-                <span class="category-tag ${categoryClass}">${escapeHtml(task.category || "Personal")}</span>
-                <label class="status-toggle">
-                    <input type="checkbox" class="task-checkbox" data-index="${realIndex}" ${task.completed ? "checked" : ""}>
-                    <span>${task.completed ? "Done" : "Pending"}</span>
-                </label>
+            <div class="card-header-row">
+                <input type="checkbox" class="task-checkbox" ${isDone ? "checked" : ""}>
+                ${statusBadge}
             </div>
-            <p class="task ${task.completed ? "completed-text" : ""}">${escapeHtml(task.text)}</p>
+            <div class="task-content-wrapper">
+                <p class="task">${task.text}</p>
+            </div>
             <div class="btn-container">
-                <button class="edit-btn" data-index="${realIndex}" type="button">Edit</button>
-                <button class="delete-btn" data-index="${realIndex}" type="button">Delete</button>
+                <button class="edit-btn"><i class="fa-solid fa-pen"></i> Edit</button>
+                <button class="delete-btn"><i class="fa-regular fa-trash-can"></i> Delete</button>
             </div>
         `;
-
         todolist.appendChild(list);
     });
-
-    updateProgress();
 }
 
-function resetForm() {
-    inputbox.value = "";
-    categorySelect.value = "Work";
-    addbtn.textContent = "ADD";
-    editingIndex = null;
-}
+// Event Delegation for Task Actions (Checkbox, Edit, Delete)
+function handleUpdate(e) {
+    const listElement = e.target.closest("li");
+    if (!listElement) return;
 
-function handleAddtask() {
-    const textValue = inputbox.value.trim();
-    if (textValue.length === 0) return;
+    const index = parseInt(listElement.getAttribute("data-index"), 10);
+    if (isNaN(index) || index < 0 || index >= storedTodo.length) return;
 
-    const selectedCategory = categorySelect.value;
-
-    if (editingIndex !== null && editingIndex >= 0 && editingIndex < storedTodo.length) {
-        storedTodo[editingIndex].text = textValue;
-        storedTodo[editingIndex].category = selectedCategory;
-    } else {
-        storedTodo.push({ text: textValue, category: selectedCategory, completed: false });
-    }
-
-    saveToLocalStorage();
-    renderTodoList();
-    resetForm();
-}
-
-function handleListAction(event) {
-    const target = event.target;
-
-    if (target.classList.contains("task-checkbox")) {
-        const index = Number(target.dataset.index);
-        if (!Number.isNaN(index) && storedTodo[index]) {
-            storedTodo[index].completed = target.checked;
-            saveToLocalStorage();
-            renderTodoList();
+    // 1. Mark as Complete (Checkbox or Task text click)
+    if (e.target.classList.contains("task-checkbox") || e.target.classList.contains("task")) {
+        if (e.target.classList.contains("task")) {
+            storedTodo[index].completed = !storedTodo[index].completed;
+        } else {
+            storedTodo[index].completed = e.target.checked;
         }
+        saveTodos();
+        displayTodo();
         return;
     }
 
-    if (target.classList.contains("delete-btn")) {
-        const index = Number(target.dataset.index);
-        if (!Number.isNaN(index) && storedTodo[index]) {
-            if (editingIndex === index) {
-                resetForm();
-            } else if (editingIndex !== null && editingIndex > index) {
-                editingIndex--;
+    // 2. Delete Task
+    if (e.target.classList.contains("delete-btn") || e.target.closest(".delete-btn")) {
+        storedTodo.splice(index, 1);
+        if (editingIndex === index) {
+            editingIndex = null;
+            addbtn.innerHTML = "ADD";
+            inputbox.value = "";
+        }
+        saveTodos();
+        displayTodo();
+        return;
+    }
+
+    // 3. Edit Task
+    if (e.target.classList.contains("edit-btn") || e.target.closest(".edit-btn")) {
+        editingIndex = index;
+        inputbox.value = storedTodo[index].text;
+        addbtn.innerHTML = "Save";
+        inputbox.focus();
+    }
+}
+
+// Filter Tabs Sync (Sidebar & Top Pills)
+filterBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+        const filterVal = btn.getAttribute("data-filter");
+        currentFilter = filterVal;
+
+        // Sync all filter buttons with matching data-filter
+        document.querySelectorAll(".filter-btn").forEach(b => {
+            if (b.getAttribute("data-filter") === filterVal) {
+                b.classList.add("active");
+            } else {
+                b.classList.remove("active");
             }
+        });
 
-            storedTodo.splice(index, 1);
-            saveToLocalStorage();
-            renderTodoList();
-        }
-        return;
-    }
+        displayTodo();
+    });
+});
 
-    if (target.classList.contains("edit-btn")) {
-        const index = Number(target.dataset.index);
-        if (!Number.isNaN(index) && storedTodo[index]) {
-            editingIndex = index;
-            inputbox.value = storedTodo[index].text;
-            categorySelect.value = storedTodo[index].category || "Work";
-            addbtn.textContent = "Save";
-            inputbox.focus();
-        }
-    }
+// Quick Add Button in Sidebar
+if (quickAddBtn) {
+    quickAddBtn.addEventListener("click", () => {
+        inputbox.focus();
+    });
 }
 
-function handleClearCompleted() {
-    storedTodo = storedTodo.filter(task => !task.completed);
-    saveToLocalStorage();
-    renderTodoList();
-    resetForm();
-}
-
-function handleDragStart(event) {
-    const item = event.target.closest("li");
-    if (!item) return;
-    draggedIndex = Number(item.dataset.index);
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", String(draggedIndex));
-}
-
-function handleDragOver(event) {
-    event.preventDefault();
-    const target = event.target.closest("li");
-    if (!target) return;
-    target.classList.add("drag-over");
-}
-
-function handleDragLeave(event) {
-    const target = event.target.closest("li");
-    if (target) {
-        target.classList.remove("drag-over");
-    }
-}
-
-function handleDrop(event) {
-    event.preventDefault();
-    const target = event.target.closest("li");
-    if (!target) return;
-
-    const dropIndex = Number(target.dataset.index);
-    if (Number.isNaN(dropIndex) || draggedIndex === null || Number.isNaN(draggedIndex)) {
-        return;
-    }
-
-    if (draggedIndex === dropIndex) {
-        target.classList.remove("drag-over");
-        return;
-    }
-
-    const [movedTask] = storedTodo.splice(draggedIndex, 1);
-    storedTodo.splice(dropIndex, 0, movedTask);
-
-    saveToLocalStorage();
-    renderTodoList();
-    draggedIndex = null;
-}
-
+// Event Listeners
 addbtn.addEventListener("click", handleAddtask);
-clearCompletedBtn.addEventListener("click", handleClearCompleted);
-searchInput.addEventListener("input", renderTodoList);
+todolist.addEventListener("click", handleUpdate);
 
-todolist.addEventListener("click", handleListAction);
-inputbox.addEventListener("keydown", event => {
-    if (event.key === "Enter") {
+// Enter Key to Add/Save
+inputbox.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
         handleAddtask();
     }
 });
 
-todolist.addEventListener("dragstart", handleDragStart);
-todolist.addEventListener("dragover", handleDragOver);
-todolist.addEventListener("dragleave", handleDragLeave);
-todolist.addEventListener("drop", handleDrop);
-
-renderTodoList();
+// Initial Render
+displayTodo();
+updateBranding();
