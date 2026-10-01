@@ -759,3 +759,169 @@ main {
     outline: 2px solid var(--accent);
     outline-offset: 1px;
 }
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+}
+
+.task-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+#todo-table {
+    width: 100%;
+    min-width: 680px;
+    border-collapse: collapse;
+    color: var(--text);
+    text-align: left;
+}
+
+#todo-table th,
+#todo-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+}
+
+#todo-table thead {
+    background: var(--field);
+}
+
+#todo-table th {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+#todo-table th:first-child,
+#todo-table td:first-child {
+    width: 64px;
+    padding-left: 20px;
+}
+
+#todo-table th:nth-child(2) {
+    width: 42%;
+}
+
+#todo-table th:nth-child(3) {
+    width: 180px;
+}
+
+#todo-table th:nth-child(4) {
+    width: 130px;
+}
+
+#todo-table th:last-child {
+    width: 170px;
+}
+
+#todo-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.task-row:hover {
+    background: color-mix(in srgb, var(--field) 65%, var(--surface));
+}
+
+.row-number {
+    color: var(--muted);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+.task-cell .task {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.due-date-cell {
+    color: var(--text);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+.due-date-cell.no-due-date {
+    color: var(--muted);
+}
+
+.priority-cell .priority-badge {
+    display: inline-flex;
+    min-width: 68px;
+    justify-content: center;
+    padding: 5px 9px;
+    font-size: 12px;
+}
+
+.table-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.table-action-btn {
+    min-width: 52px;
+    height: 30px;
+    padding: 0 9px;
+    border: 1px solid;
+    border-radius: 4px;
+    background: transparent;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.table-action-btn.edit-btn {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.table-action-btn.edit-btn:hover {
+    background: var(--accent);
+    color: #ffffff;
+}
+
+:root[data-theme="dark"] .table-action-btn.edit-btn:hover {
+    color: #14221a;
+}
+
+.table-action-btn.delete-btn {
+    border-color: #d94f4f;
+    color: #c13e3e;
+}
+
+.table-action-btn.delete-btn:hover {
+    background: #d94f4f;
+    color: #ffffff;
+}
+
+.empty-tasks {
+    height: 86px;
+    color: var(--muted);
+    font-size: 14px;
+    text-align: center;
+}
+
+@media (max-width: 700px) {
+    #todo-table {
+        min-width: 640px;
+    }
+
+    #todo-table th,
+    #todo-table td {
+        padding: 12px;
+    }
+}

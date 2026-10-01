@@ -18,7 +18,7 @@ const calendarDateFormatter = new Intl.DateTimeFormat(undefined, {
 const priorityInputs = document.querySelectorAll('input[name="priority"]');
 const taskForm = document.getElementById("task-form");
 const addbtn = document.getElementById("addbtn");
-const todolist = document.querySelector("#todo-container ul");
+const todolist = document.querySelector("#todo-table tbody");
 const themeToggle = document.getElementById("theme-toggle");
 let editingIndex = null;
 const currentDate = new Date();
@@ -160,49 +160,77 @@ function handleAddTask(event) {
 function displayTodo() {
     todolist.replaceChildren();
 
+    if (storedTodo.length === 0) {
+        const emptyRow = document.createElement("tr");
+        const emptyCell = document.createElement("td");
+        emptyCell.colSpan = 5;
+        emptyCell.className = "empty-tasks";
+        emptyCell.textContent = "Your tasks will appear here.";
+        emptyRow.append(emptyCell);
+        todolist.append(emptyRow);
+        return;
+    }
+
     storedTodo.forEach((task, index) => {
-        const list = document.createElement("li");
-        list.className = `task-item priority-${task.priority.toLowerCase()}`;
+        const row = document.createElement("tr");
+        row.className = `task-row priority-${task.priority.toLowerCase()}`;
 
         const title = document.createElement("p");
         title.className = "task";
         title.textContent = task.text;
 
-        const metadata = document.createElement("div");
-        metadata.className = "task-meta";
+        const serialCell = document.createElement("td");
+        serialCell.className = "row-number";
+        serialCell.textContent = String(index + 1);
 
-        const priorityBadge = document.createElement("span");
-        priorityBadge.className = `priority-badge priority-${task.priority.toLowerCase()}`;
-        priorityBadge.textContent = `${task.priority} priority`;
-        metadata.append(priorityBadge);
+        const taskCell = document.createElement("td");
+        taskCell.className = "task-cell";
+        taskCell.append(title);
 
+        const dueDateCell = document.createElement("td");
+        dueDateCell.className = "due-date-cell";
         if (task.dueDate) {
             const dueDate = document.createElement("time");
             dueDate.dateTime = task.dueDate;
-            dueDate.textContent = `Due ${calendarDateFormatter.format(parseISODate(task.dueDate))}`;
-            metadata.append(dueDate);
+            dueDate.textContent = calendarDateFormatter.format(parseISODate(task.dueDate));
+            dueDateCell.append(dueDate);
+        } else {
+            dueDateCell.classList.add("no-due-date");
+            dueDateCell.textContent = "No due date";
         }
 
+        const priorityCell = document.createElement("td");
+        priorityCell.className = "priority-cell";
+
+        const priorityBadge = document.createElement("span");
+        priorityBadge.className = `priority-badge priority-${task.priority.toLowerCase()}`;
+        priorityBadge.textContent = task.priority;
+        priorityCell.append(priorityBadge);
+
         const buttons = document.createElement("div");
-        buttons.className = "btn-container";
+        buttons.className = "table-actions";
 
         const editButton = document.createElement("button");
-        editButton.className = "edit-btn";
+        editButton.className = "edit-btn table-action-btn";
         editButton.type = "button";
         editButton.dataset.action = "edit";
         editButton.dataset.index = index;
         editButton.textContent = "Edit";
 
         const deleteButton = document.createElement("button");
-        deleteButton.className = "delete-btn";
+        deleteButton.className = "delete-btn table-action-btn";
         deleteButton.type = "button";
         deleteButton.dataset.action = "delete";
         deleteButton.dataset.index = index;
         deleteButton.textContent = "Delete";
 
+        const actionsCell = document.createElement("td");
+        actionsCell.className = "actions-cell";
         buttons.append(editButton, deleteButton);
-        list.append(title, metadata, buttons);
-        todolist.append(list);
+        actionsCell.append(buttons);
+
+        row.append(serialCell, taskCell, dueDateCell, priorityCell, actionsCell);
+        todolist.append(row);
     });
 }
 

@@ -62,7 +62,21 @@
         </form>
 
         <section id="todo-container" aria-label="Tasks">
-            <ul aria-live="polite"></ul>
+            <div class="task-table-wrap">
+                <table id="todo-table">
+                    <caption class="visually-hidden">Saved tasks with their due dates and priorities</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Task</th>
+                            <th scope="col">Due date</th>
+                            <th scope="col">Priority</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody aria-live="polite"></tbody>
+                </table>
+            </div>
         </section>
     </main>
 
