@@ -1,13 +1,14 @@
+// DOM Elements
 const inputbox = document.getElementById("input");
 const categorySelect = document.getElementById("category-select");
 const addbtn = document.getElementById("addbtn");
-const todolist = document.querySelector("#todo-container ul");
+const todolist = document.getElementById("task-matrix") || document.querySelector("#todo-container ul");
 const progressBar = document.getElementById("progress-bar");
 const progressStats = document.getElementById("progress-stats");
 
 let editingIndex = null;
 
-// Load and normalize existing data from localStorage (handles old string-only items)
+// Load and normalize existing data from localStorage
 let rawTodos = JSON.parse(localStorage.getItem("todos")) || [];
 let storedTodo = rawTodos.map(item => {
     if (typeof item === "string") {
@@ -21,35 +22,44 @@ let storedTodo = rawTodos.map(item => {
 });
 saveToLocalStorage();
 
-// Helper: Escape HTML to prevent injection
+// Save tasks to localStorage
+function saveToLocalStorage() {
+    localStorage.setItem("todos", JSON.stringify(storedTodo));
+}
+
+// Escape HTML helper
 function escapeHtml(str) {
     const div = document.createElement("div");
     div.textContent = str;
     return div.innerHTML;
 }
 
-// Save todos array to localStorage
-function saveToLocalStorage() {
-    localStorage.setItem("todos", JSON.stringify(storedTodo));
-}
-
-// Update the visual progress bar and text statistics
+// Update progress bar & stats
 function updateProgress() {
     const total = storedTodo.length;
     const completed = storedTodo.filter(t => t.completed).length;
     const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
 
     if (progressBar) {
-        progressBar.style.width = percentage + "%";
+        progressBar.style.width = `${percentage}%`;
     }
     if (progressStats) {
-        progressStats.textContent = `${percentage}% Completed (${completed}/${total})`;
+        progressStats.textContent = `${percentage}% (${completed} of ${total} completed)`;
     }
 }
 
-// Render all todos
+// Display all tasks
 function displayTodo() {
     todolist.innerHTML = "";
+
+    if (storedTodo.length === 0) {
+        const empty = document.createElement("li");
+        empty.className = "empty-message";
+        empty.textContent = "No tasks yet. Add one above!";
+        todolist.appendChild(empty);
+        updateProgress();
+        return;
+    }
 
     storedTodo.forEach((task, index) => {
         const list = document.createElement("li");
@@ -88,11 +98,11 @@ function handleAddtask() {
     const selectedCategory = categorySelect.value;
 
     if (editingIndex !== null && editingIndex >= 0 && editingIndex < storedTodo.length) {
-        // Update existing task
+        // Edit existing task
         storedTodo[editingIndex].text = textValue;
         storedTodo[editingIndex].category = selectedCategory;
         editingIndex = null;
-        addbtn.textContent = "ADD";
+        addbtn.textContent = "Add";
     } else {
         // Add new task
         storedTodo.push({
@@ -107,9 +117,10 @@ function handleAddtask() {
 
     inputbox.value = "";
     categorySelect.value = "Work";
+    inputbox.focus();
 }
 
-// Handle clicks inside the todo list (checkbox toggle, edit, delete)
+// Handle checkbox toggle, edit, and delete
 function handleListAction(e) {
     // Checkbox toggle
     if (e.target.classList.contains("task-checkbox")) {
@@ -128,7 +139,7 @@ function handleListAction(e) {
         if (!isNaN(index) && storedTodo[index]) {
             if (editingIndex === index) {
                 editingIndex = null;
-                addbtn.textContent = "ADD";
+                addbtn.textContent = "Add";
                 inputbox.value = "";
             } else if (editingIndex !== null && editingIndex > index) {
                 editingIndex--;
@@ -159,12 +170,12 @@ function handleListAction(e) {
 addbtn.addEventListener("click", handleAddtask);
 todolist.addEventListener("click", handleListAction);
 
-// Support pressing Enter key in the input box
+// Press Enter to add/save task
 inputbox.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
         handleAddtask();
     }
 });
 
-// Initial display on page load
+// Initial render
 displayTodo();
