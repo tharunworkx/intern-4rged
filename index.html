@@ -10,7 +10,21 @@
 
     <!-- Header / Input section -->
     <header id="input-container">
-        <h3>TODO List</h3>
+        <div class="header-left">
+            <h3>TODO List</h3>
+            <div class="theme-wrapper">
+                <span class="theme-icon">🎨</span>
+                <select id="theme-select" aria-label="Select Theme">
+                    <option value="light">☀️ Light</option>
+                    <option value="dark">🌙 Dark</option>
+                    <option value="ocean">🌊 Ocean</option>
+                    <option value="purple">💜 Purple</option>
+                    <option value="forest">🌲 Forest</option>
+                    <option value="sunset">🌅 Sunset</option>
+                </select>
+            </div>
+        </div>
+
         <section id="inner_cont">
             <input id="input" type="text" placeholder="Enter a task..." autocomplete="off">
             <select id="category-select">
