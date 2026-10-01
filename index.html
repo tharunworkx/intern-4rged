@@ -100,17 +100,27 @@
         </main>
     </div>
 
-    <!-- Confirmation Modal on Delete -->
-    <div id="delete-modal" class="modal-overlay hidden">
+    <!-- Confirmation Modal on Delete (UI Action Format) -->
+    <div id="delete-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-card">
+            <button id="close-modal-x" class="modal-close-x" aria-label="Close modal">&times;</button>
             <div class="modal-icon-wrap">
                 <i class="fa-solid fa-trash-can"></i>
             </div>
-            <h3 class="modal-title">Delete Task?</h3>
-            <p class="modal-desc">Are you sure you want to delete this task? This action cannot be undone.</p>
+            <span class="modal-badge"><i class="fa-solid fa-triangle-exclamation"></i> Delete Action</span>
+            <h3 id="modal-title" class="modal-title">Delete this task?</h3>
+            <p class="modal-desc">This action cannot be undone. You are about to permanently remove:</p>
+            
+            <div class="delete-task-preview">
+                <i class="fa-regular fa-file-lines preview-icon"></i>
+                <span id="delete-task-preview-text" class="preview-text">Task item</span>
+            </div>
+
             <div class="modal-actions">
                 <button id="cancel-delete-btn" class="modal-btn cancel-btn">Cancel</button>
-                <button id="confirm-delete-btn" class="modal-btn confirm-delete-btn">Delete</button>
+                <button id="confirm-delete-btn" class="modal-btn confirm-delete-btn">
+                    <i class="fa-solid fa-trash-can"></i> Yes, Delete
+                </button>
             </div>
         </div>
     </div>

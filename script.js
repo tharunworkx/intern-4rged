@@ -95,10 +95,12 @@ const todolist = document.querySelector("#task-list") || document.querySelector(
 const filterBtns = document.querySelectorAll(".filter-btn");
 const quickAddBtn = document.getElementById("quick-add-btn");
 
-// Modal Elements (Feature 2)
+// Modal Elements (Feature 2: Delete Action UI Format)
 const deleteModal = document.getElementById("delete-modal");
 const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
 const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
+const closeModalX = document.getElementById("close-modal-x");
+const deleteTaskPreviewText = document.getElementById("delete-task-preview-text");
 
 let editingIndex = null;
 let currentFilter = "all";
@@ -197,15 +199,18 @@ function displayTodo() {
                     <i class="fa-solid fa-clipboard-check"></i>
                 </div>
                 <h3 class="empty-state-title">No ${filterLabel}tasks found</h3>
-                <p class="empty-state-desc">You're all caught up! Add a new task above to stay organized.</p>
+                <p class="empty-state-desc">You're all caught up! Add a new task above to stay productive.</p>
             </li>
         `;
     }
 }
 
-// Open Delete Confirmation Modal
+// Open Delete Confirmation Modal (UI Format)
 function openDeleteModal(index) {
     taskToDeleteIndex = index;
+    if (storedTodo[index] && deleteTaskPreviewText) {
+        deleteTaskPreviewText.textContent = `"${storedTodo[index].text}"`;
+    }
     if (deleteModal) {
         deleteModal.classList.remove("hidden");
     }
@@ -256,7 +261,7 @@ function handleUpdate(e) {
         return;
     }
 
-    // 2. Delete Task -> Open Custom Confirmation Modal
+    // 2. Delete Task -> Open Custom Delete Action Modal
     if (e.target.classList.contains("delete-btn") || e.target.closest(".delete-btn")) {
         openDeleteModal(index);
         return;
@@ -297,12 +302,15 @@ if (quickAddBtn) {
     });
 }
 
-// Confirmation Modal Action Listeners (Feature 2)
+// Modal Action Listeners (Feature 2)
 if (confirmDeleteBtn) {
     confirmDeleteBtn.addEventListener("click", confirmDeleteTask);
 }
 if (cancelDeleteBtn) {
     cancelDeleteBtn.addEventListener("click", closeDeleteModal);
+}
+if (closeModalX) {
+    closeModalX.addEventListener("click", closeDeleteModal);
 }
 if (deleteModal) {
     deleteModal.addEventListener("click", (e) => {
