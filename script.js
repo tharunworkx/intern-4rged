@@ -7,6 +7,77 @@ function updateBranding() {
     document.title = "4rged Todo";
 }
 
+// Auto-Construct 4rged Todo UI if missing from static HTML
+function ensureEverDoLayout() {
+    if (!document.querySelector(".window-container")) {
+        document.body.innerHTML = `
+            <div class="window-container">
+                <aside class="sidebar">
+                    <div class="sidebar-top">
+                        <div class="sidebar-brand">
+                            <div class="brand-icon-box">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </div>
+                            <div class="brand-details">
+                                <span class="brand-title">4rged</span>
+                                <span class="brand-subtitle">WORKSPACE</span>
+                            </div>
+                        </div>
+                    </div>
+                    <nav class="sidebar-nav">
+                        <button class="nav-item filter-btn active" data-filter="all">
+                            <i class="fa-solid fa-inbox"></i>
+                            <span>All Tasks</span>
+                        </button>
+                        <button class="nav-item filter-btn" data-filter="active">
+                            <i class="fa-regular fa-circle-dot"></i>
+                            <span>Active</span>
+                        </button>
+                        <button class="nav-item filter-btn" data-filter="completed">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Completed</span>
+                        </button>
+                    </nav>
+                    <div class="sidebar-bottom">
+                        <button id="quick-add-btn" class="floating-add-btn" title="Add New Task">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </aside>
+                <main class="main-content">
+                    <header class="content-header">
+                        <div class="header-titles">
+                            <span class="sub-badge">4rged — MVP</span>
+                            <h1 class="main-title">4rged Todo</h1>
+                        </div>
+                        <div id="filter-container" class="top-filter-pills">
+                            <button class="filter-btn active" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="active">Active</button>
+                            <button class="filter-btn" data-filter="completed">Completed</button>
+                        </div>
+                    </header>
+                    <div id="input-container">
+                        <section id="inner_cont">
+                            <div class="input-field-box">
+                                <i class="fa-solid fa-pen-to-square input-icon"></i>
+                                <input id="input" placeholder="Enter a new task..." autocomplete="off">
+                            </div>
+                            <button id="addbtn">ADD</button>
+                        </section>
+                    </div>
+                    <div class="section-heading">
+                        <h2 id="section-heading-text">Task Items</h2>
+                    </div>
+                    <div id="todo-container">
+                        <ul id="task-list"></ul>
+                    </div>
+                </main>
+            </div>
+        `;
+    }
+    updateBranding();
+}
+
 // Ensure Font Awesome & Fonts are present
 if (!document.querySelector("link[href*='font-awesome']")) {
     const fa = document.createElement("link");
@@ -14,6 +85,8 @@ if (!document.querySelector("link[href*='font-awesome']")) {
     fa.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css";
     document.head.appendChild(fa);
 }
+
+ensureEverDoLayout();
 
 // DOM Element References
 const inputbox = document.querySelector("#input");
@@ -30,6 +103,39 @@ const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
 let editingIndex = null;
 let currentFilter = "all";
 let taskToDeleteIndex = null;
+
+// Open Delete Confirmation Modal (In-App Centered UI Format)
+function openDeleteModal(index) {
+    taskToDeleteIndex = index;
+    if (deleteModal) {
+        deleteModal.classList.remove("hidden");
+    }
+}
+
+// Close Delete Confirmation Modal
+function closeDeleteModal() {
+    taskToDeleteIndex = null;
+    if (deleteModal) {
+        deleteModal.classList.add("hidden");
+    }
+}
+
+// Confirm Delete Action
+function confirmDeleteTask() {
+    if (taskToDeleteIndex !== null && taskToDeleteIndex >= 0 && taskToDeleteIndex < storedTodo.length) {
+        storedTodo.splice(taskToDeleteIndex, 1);
+        if (editingIndex === taskToDeleteIndex) {
+            editingIndex = null;
+            addbtn.innerHTML = "ADD";
+            inputbox.value = "";
+        } else if (editingIndex !== null && editingIndex > taskToDeleteIndex) {
+            editingIndex--;
+        }
+        saveTodos();
+        displayTodo();
+    }
+    closeDeleteModal();
+}
 
 // Load stored todos with backward compatibility
 function getStoredTodos() {
@@ -76,7 +182,7 @@ function handleAddtask() {
     displayTodo();
 }
 
-// Display Todos with Clearly Defined Boxes & Empty State Illustration
+// Display Todos with Clearly Defined Boxes
 function displayTodo() {
     todolist.innerHTML = "";
 
@@ -115,52 +221,15 @@ function displayTodo() {
         todolist.appendChild(list);
     });
 
-    // Feature 1: Empty State Illustration
     if (visibleTasks === 0) {
-        let filterLabel = currentFilter === "active" ? "active " : (currentFilter === "completed" ? "completed " : "");
         todolist.innerHTML = `
-            <li class="empty-state-card">
-                <div class="empty-state-icon">
-                    <i class="fa-solid fa-clipboard-check"></i>
-                </div>
-                <h3 class="empty-state-title">No ${filterLabel}tasks found</h3>
-                <p class="empty-state-desc">You're all caught up! Add a new task above to stay productive.</p>
-            </li>
+            <div id="empty-state" style="text-align: center; color: #94a3b8; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-clipboard-list" style="font-size: 48px; margin-bottom: 16px; color: #cbd5e1;"></i>
+                <h3 style="margin-bottom: 8px; color: #64748b; font-size: 18px;">No tasks found</h3>
+                <p style="font-size: 14px;">Enjoy your day or add a new task!</p>
+            </div>
         `;
     }
-}
-
-// Open Delete Confirmation Modal (In-App Centered UI Format)
-function openDeleteModal(index) {
-    taskToDeleteIndex = index;
-    if (deleteModal) {
-        deleteModal.classList.remove("hidden");
-    }
-}
-
-// Close Delete Confirmation Modal
-function closeDeleteModal() {
-    taskToDeleteIndex = null;
-    if (deleteModal) {
-        deleteModal.classList.add("hidden");
-    }
-}
-
-// Confirm Delete Action
-function confirmDeleteTask() {
-    if (taskToDeleteIndex !== null && taskToDeleteIndex >= 0 && taskToDeleteIndex < storedTodo.length) {
-        storedTodo.splice(taskToDeleteIndex, 1);
-        if (editingIndex === taskToDeleteIndex) {
-            editingIndex = null;
-            addbtn.innerHTML = "ADD";
-            inputbox.value = "";
-        } else if (editingIndex !== null && editingIndex > taskToDeleteIndex) {
-            editingIndex--;
-        }
-        saveTodos();
-        displayTodo();
-    }
-    closeDeleteModal();
 }
 
 // Event Delegation for Task Actions (Checkbox, Edit, Delete)
@@ -183,7 +252,7 @@ function handleUpdate(e) {
         return;
     }
 
-    // 2. Delete Task -> Open Custom In-App Modal (NO native browser alert)
+    // 2. Delete Task -> Open Custom In-App Modal (NO window.confirm)
     if (e.target.classList.contains("delete-btn") || e.target.closest(".delete-btn")) {
         openDeleteModal(index);
         return;
