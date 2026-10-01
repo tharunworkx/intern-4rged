@@ -21,6 +21,7 @@ const taskForm = document.getElementById("task-form");
 const addbtn = document.getElementById("addbtn");
 const todolist = document.querySelector("#todo-table tbody");
 const themeToggle = document.getElementById("theme-toggle");
+const themeIcon = document.getElementById("theme-icon");
 const searchInput = document.getElementById("search-input");
 const progressBar = document.getElementById("progress-bar");
 const progressStats = document.getElementById("progress-stats");
@@ -384,7 +385,10 @@ function handleTaskAction(event) {
 
 function setTheme(isDark) {
     document.documentElement.dataset.theme = isDark ? "dark" : "light";
-    themeToggle.textContent = isDark ? "Light mode" : "Dark mode";
+    const nextTheme = isDark ? "light" : "dark";
+    themeIcon.className = isDark ? "fa-solid fa-sun" : "fa-solid fa-moon";
+    themeToggle.setAttribute("aria-label", `Switch to ${nextTheme} mode`);
+    themeToggle.title = `Switch to ${nextTheme} mode`;
     themeToggle.setAttribute("aria-pressed", String(isDark));
     localStorage.setItem("theme", isDark ? "dark" : "light");
 }
