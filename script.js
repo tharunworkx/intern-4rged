@@ -4,6 +4,7 @@ if (typeof document === "undefined") {
 }
 
 const inputbox = document.getElementById("task-input");
+const categorySelect = document.getElementById("category-select");
 const dueDateInput = document.getElementById("due-date");
 const dueDateTrigger = document.getElementById("due-date-trigger");
 const dueDateLabel = document.getElementById("due-date-label");
@@ -20,9 +21,14 @@ const taskForm = document.getElementById("task-form");
 const addbtn = document.getElementById("addbtn");
 const todolist = document.querySelector("#todo-table tbody");
 const themeToggle = document.getElementById("theme-toggle");
+const searchInput = document.getElementById("search-input");
+const progressBar = document.getElementById("progress-bar");
+const progressStats = document.getElementById("progress-stats");
+const progressTrack = document.querySelector(".progress-track");
 let editingIndex = null;
 const currentDate = new Date();
 let visibleMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+let taskToAnimate = null;
 
 function toISODate(date) {
     const year = date.getFullYear();
@@ -114,18 +120,31 @@ function setSelectedPriority(priority) {
 
 let storedTodo = (JSON.parse(localStorage.getItem("todos")) || []).map((task) =>
     typeof task === "string"
-        ? { text: task, dueDate: "", priority: "Medium" }
+        ? { text: task, dueDate: "", priority: "Medium", category: "Personal", completed: false }
         : {
             text: task.text,
             dueDate: task.dueDate || "",
             priority: ["High", "Medium", "Low"].includes(task.priority)
                 ? task.priority
-                : "Medium"
+                : "Medium",
+            category: ["Work", "Personal", "Urgent"].includes(task.category)
+                ? task.category
+                : "Personal",
+            completed: Boolean(task.completed)
         }
 );
 
 function saveTodos() {
     localStorage.setItem("todos", JSON.stringify(storedTodo));
+}
+
+function updateProgress() {
+    const total = storedTodo.length;
+    const completed = storedTodo.filter((task) => task.completed).length;
+    const percentage = total ? Math.round((completed / total) * 100) : 0;
+    progressBar.style.width = `${percentage}%`;
+    progressStats.textContent = `${percentage}% completed (${completed}/${total})`;
+    progressTrack.setAttribute("aria-valuenow", String(percentage));
 }
 
 function resetForm() {
@@ -141,12 +160,15 @@ function handleAddTask(event) {
     const task = {
         text: inputbox.value.trim(),
         dueDate: dueDateInput.value,
-        priority: getSelectedPriority()
+        priority: getSelectedPriority(),
+        category: categorySelect.value,
+        completed: editingIndex === null ? false : storedTodo[editingIndex].completed
     };
 
     if (!task.text) return;
 
     if (editingIndex === null) {
+        taskToAnimate = task;
         storedTodo.push(task);
     } else {
         storedTodo[editingIndex] = task;
@@ -160,32 +182,48 @@ function handleAddTask(event) {
 function displayTodo() {
     todolist.replaceChildren();
 
-    if (storedTodo.length === 0) {
+    const query = searchInput.value.trim().toLowerCase();
+    const visibleTasks = storedTodo
+        .map((task, index) => ({ task, index }))
+        .filter(({ task }) => `${task.text} ${task.category}`.toLowerCase().includes(query));
+
+    if (visibleTasks.length === 0) {
         const emptyRow = document.createElement("tr");
         const emptyCell = document.createElement("td");
-        emptyCell.colSpan = 5;
+        emptyCell.colSpan = 7;
         emptyCell.className = "empty-tasks";
-        emptyCell.textContent = "Your tasks will appear here.";
+        emptyCell.textContent = query ? "No tasks match your search." : "Your tasks will appear here.";
         emptyRow.append(emptyCell);
         todolist.append(emptyRow);
+        taskToAnimate = null;
+        updateProgress();
         return;
     }
 
-    storedTodo.forEach((task, index) => {
+    visibleTasks.forEach(({ task, index }, rowIndex) => {
         const row = document.createElement("tr");
         row.className = `task-row priority-${task.priority.toLowerCase()}`;
+        if (task.completed) row.classList.add("completed");
+        if (task === taskToAnimate) row.classList.add("is-entering");
 
         const title = document.createElement("p");
-        title.className = "task";
+        title.className = task.completed ? "task completed-text" : "task";
         title.textContent = task.text;
 
         const serialCell = document.createElement("td");
         serialCell.className = "row-number";
-        serialCell.textContent = String(index + 1);
+        serialCell.textContent = String(rowIndex + 1);
 
         const taskCell = document.createElement("td");
         taskCell.className = "task-cell";
         taskCell.append(title);
+
+        const categoryCell = document.createElement("td");
+        categoryCell.className = "category-cell";
+        const categoryBadge = document.createElement("span");
+        categoryBadge.className = `category-tag tag-${task.category.toLowerCase()}`;
+        categoryBadge.textContent = task.category;
+        categoryCell.append(categoryBadge);
 
         const dueDateCell = document.createElement("td");
         dueDateCell.className = "due-date-cell";
@@ -206,6 +244,20 @@ function displayTodo() {
         priorityBadge.className = `priority-badge priority-${task.priority.toLowerCase()}`;
         priorityBadge.textContent = task.priority;
         priorityCell.append(priorityBadge);
+
+        const statusCell = document.createElement("td");
+        statusCell.className = "status-cell";
+        const statusLabel = document.createElement("label");
+        statusLabel.className = "status-toggle";
+        const statusCheckbox = document.createElement("input");
+        statusCheckbox.type = "checkbox";
+        statusCheckbox.className = "task-checkbox";
+        statusCheckbox.dataset.index = index;
+        statusCheckbox.checked = task.completed;
+        const statusText = document.createElement("span");
+        statusText.textContent = task.completed ? "Done" : "Pending";
+        statusLabel.append(statusCheckbox, statusText);
+        statusCell.append(statusLabel);
 
         const buttons = document.createElement("div");
         buttons.className = "table-actions";
@@ -229,27 +281,61 @@ function displayTodo() {
         buttons.append(editButton, deleteButton);
         actionsCell.append(buttons);
 
-        row.append(serialCell, taskCell, dueDateCell, priorityCell, actionsCell);
+        row.append(serialCell, taskCell, categoryCell, dueDateCell, priorityCell, statusCell, actionsCell);
         todolist.append(row);
     });
+
+    taskToAnimate = null;
+    updateProgress();
 }
 
 function handleTaskAction(event) {
+    const checkbox = event.target.closest(".task-checkbox");
+    if (checkbox) {
+        if (event.type !== "change") return;
+        const checkboxIndex = Number(checkbox.dataset.index);
+        if (storedTodo[checkboxIndex]) {
+            storedTodo[checkboxIndex].completed = checkbox.checked;
+            saveTodos();
+            displayTodo();
+        }
+        return;
+    }
+
     const button = event.target.closest("button[data-action]");
     if (!button) return;
 
     const index = Number(button.dataset.index);
     if (button.dataset.action === "delete") {
-        storedTodo.splice(index, 1);
-        saveTodos();
-        if (editingIndex !== null) resetForm();
-        displayTodo();
+        const task = storedTodo[index];
+        const row = button.closest("tr");
+        if (!task || !row) return;
+
+        row.classList.add("is-removing");
+        row.querySelectorAll("button, input").forEach((control) => {
+            control.disabled = true;
+        });
+        window.setTimeout(() => {
+            const taskIndex = storedTodo.indexOf(task);
+            if (taskIndex === -1) return;
+
+            if (editingIndex === taskIndex) {
+                resetForm();
+            } else if (editingIndex !== null && editingIndex > taskIndex) {
+                editingIndex -= 1;
+            }
+
+            storedTodo.splice(taskIndex, 1);
+            saveTodos();
+            displayTodo();
+        }, 220);
         return;
     }
 
     const task = storedTodo[index];
     editingIndex = index;
     inputbox.value = task.text;
+    categorySelect.value = task.category;
     dueDateInput.value = task.dueDate;
     updateDueDateLabel();
     setSelectedPriority(task.priority);
@@ -266,6 +352,8 @@ function setTheme(isDark) {
 
 taskForm.addEventListener("submit", handleAddTask);
 todolist.addEventListener("click", handleTaskAction);
+todolist.addEventListener("change", handleTaskAction);
+searchInput.addEventListener("input", displayTodo);
 dueDateTrigger.addEventListener("click", () => {
     if (!calendarPopover.hidden) {
         closeCalendar();

@@ -58,19 +58,43 @@
                     </label>
                 </div>
             </fieldset>
+            <label class="task-field category-field" for="category-select">
+                <span>Category</span>
+                <select id="category-select">
+                    <option value="Work">Work</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Urgent">Urgent</option>
+                </select>
+            </label>
             <button id="addbtn" type="submit">ADD</button>
         </form>
 
+        <section id="progress-container" aria-label="Task progress">
+            <div class="progress-header">
+                <span class="progress-title">Task progress</span>
+                <span id="progress-stats">0% completed (0/0)</span>
+            </div>
+            <div class="progress-track" role="progressbar" aria-label="Tasks completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div id="progress-bar"></div>
+            </div>
+        </section>
+
         <section id="todo-container" aria-label="Tasks">
+            <div class="filter-bar">
+                <label class="visually-hidden" for="search-input">Search tasks</label>
+                <input id="search-input" type="search" placeholder="Search tasks..." autocomplete="off">
+            </div>
             <div class="task-table-wrap">
                 <table id="todo-table">
-                    <caption class="visually-hidden">Saved tasks with their due dates and priorities</caption>
+                    <caption class="visually-hidden">Saved tasks with categories, due dates, priorities, and status</caption>
                     <thead>
                         <tr>
                             <th scope="col">#</th>
                             <th scope="col">Task</th>
+                            <th scope="col">Category</th>
                             <th scope="col">Due date</th>
                             <th scope="col">Priority</th>
+                            <th scope="col">Status</th>
                             <th scope="col">Actions</th>
                         </tr>
                     </thead>
