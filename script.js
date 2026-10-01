@@ -25,6 +25,7 @@ const searchInput = document.getElementById("search-input");
 const progressBar = document.getElementById("progress-bar");
 const progressStats = document.getElementById("progress-stats");
 const progressTrack = document.querySelector(".progress-track");
+const quickAddButton = document.getElementById("quick-add-btn");
 let editingIndex = null;
 const currentDate = new Date();
 let visibleMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -371,11 +372,13 @@ document.querySelectorAll(".task-view-filter").forEach((button) => {
         document.querySelectorAll(".task-view-filter").forEach((filterButton) => {
             const isActive = filterButton === button;
             filterButton.classList.toggle("is-active", isActive);
+            filterButton.classList.toggle("active", isActive);
             filterButton.setAttribute("aria-pressed", String(isActive));
         });
         displayTodo();
     });
 });
+quickAddButton.addEventListener("click", () => inputbox.focus());
 dueDateTrigger.addEventListener("click", () => {
     if (!calendarPopover.hidden) {
         closeCalendar();
