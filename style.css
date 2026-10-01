@@ -142,6 +142,30 @@ body {
     padding: 30px 40px;
 }
 
+.filter-bar {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto 20px;
+}
+
+#search-input {
+    width: min(100%, 360px);
+    height: 40px;
+    padding: 0 14px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    outline: none;
+    background: white;
+    color: #1e293b;
+    font-size: 15px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#search-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
 #todo-container ul {
     width: 100%;
     max-width: 1200px;
@@ -165,12 +189,39 @@ body {
     flex-direction: column;
     justify-content: space-between;
     padding: 18px;
-    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 #todo-container ul li:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+#todo-container ul li.is-entering {
+    animation: task-fade-in 0.28s ease both;
+}
+
+#todo-container ul li.is-removing {
+    animation: task-slide-out 0.2s ease forwards;
+    pointer-events: none;
+}
+
+@keyframes task-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes task-slide-out {
+    to {
+        opacity: 0;
+        transform: translateX(20px);
+    }
 }
 
 /* Card completed state */
