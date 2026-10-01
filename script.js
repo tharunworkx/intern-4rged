@@ -1,40 +1,69 @@
+// ==========================================
+// TODO APPLICATION SCRIPT
+// ==========================================
+
 // DOM Elements
 const inputbox = document.getElementById("input");
 const categorySelect = document.getElementById("category-select");
 const addbtn = document.getElementById("addbtn");
-const todolist = document.getElementById("task-matrix") || document.querySelector("#todo-container ul");
+const todolist = document.getElementById("task-matrix") || document.getElementById("task-list") || document.querySelector("#todo-container ul");
 const progressBar = document.getElementById("progress-bar");
 const progressStats = document.getElementById("progress-stats");
+const themeSelect = document.getElementById("theme-select");
 
 let editingIndex = null;
+let currentFilter = "all";
 
-// Load and normalize existing data from localStorage
-let rawTodos = JSON.parse(localStorage.getItem("todos")) || [];
-let storedTodo = rawTodos.map(item => {
-    if (typeof item === "string") {
-        return { text: item, category: "Personal", completed: false };
+// --- Theme Management ---
+function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("app-theme", theme);
+    if (themeSelect) {
+        themeSelect.value = theme;
     }
-    return {
-        text: item.text || "",
-        category: item.category || "Personal",
-        completed: Boolean(item.completed)
-    };
-});
-saveToLocalStorage();
+}
 
-// Save tasks to localStorage
-function saveToLocalStorage() {
+const savedTheme = localStorage.getItem("app-theme") || "light";
+applyTheme(savedTheme);
+
+if (themeSelect) {
+    themeSelect.addEventListener("change", (e) => {
+        applyTheme(e.target.value);
+    });
+}
+
+// --- Todo Storage & Management ---
+function getStoredTodos() {
+    try {
+        let raw = JSON.parse(localStorage.getItem("todos")) || [];
+        return raw.map(item => {
+            if (typeof item === "string") {
+                return { text: item, category: "Personal", completed: false };
+            }
+            return {
+                text: item.text || "",
+                category: item.category || "Personal",
+                completed: Boolean(item.completed)
+            };
+        });
+    } catch (e) {
+        return [];
+    }
+}
+
+let storedTodo = getStoredTodos();
+
+function saveTodos() {
     localStorage.setItem("todos", JSON.stringify(storedTodo));
 }
 
-// Escape HTML helper
 function escapeHtml(str) {
     const div = document.createElement("div");
     div.textContent = str;
     return div.innerHTML;
 }
 
-// Update progress bar & stats
+// --- Progress Bar Calculation ---
 function updateProgress() {
     const total = storedTodo.length;
     const completed = storedTodo.filter(t => t.completed).length;
@@ -48,11 +77,20 @@ function updateProgress() {
     }
 }
 
-// Display all tasks
+// --- Display Todos ---
 function displayTodo() {
+    if (!todolist) return;
     todolist.innerHTML = "";
 
-    if (storedTodo.length === 0) {
+    const filtered = storedTodo
+        .map((task, idx) => ({ ...task, index: idx }))
+        .filter(task => {
+            if (currentFilter === "active") return !task.completed;
+            if (currentFilter === "completed") return task.completed;
+            return true;
+        });
+
+    if (filtered.length === 0) {
         const empty = document.createElement("li");
         empty.className = "empty-message";
         empty.textContent = "No tasks yet. Add one above!";
@@ -61,7 +99,7 @@ function displayTodo() {
         return;
     }
 
-    storedTodo.forEach((task, index) => {
+    filtered.forEach(task => {
         const list = document.createElement("li");
         if (task.completed) {
             list.classList.add("completed");
@@ -73,14 +111,14 @@ function displayTodo() {
             <div class="card-header">
                 <span class="category-tag ${categoryClass}">${escapeHtml(task.category || "Personal")}</span>
                 <label class="status-toggle">
-                    <input type="checkbox" class="task-checkbox" data-index="${index}" ${task.completed ? "checked" : ""}>
+                    <input type="checkbox" class="task-checkbox" data-index="${task.index}" ${task.completed ? "checked" : ""}>
                     <span>${task.completed ? "Done" : "Pending"}</span>
                 </label>
             </div>
             <p class="task ${task.completed ? "completed-text" : ""}">${escapeHtml(task.text)}</p>
             <div class="btn-container">
-                <button class="edit-btn" data-index="${index}">Edit</button>
-                <button class="delete-btn" data-index="${index}">Delete</button>
+                <button class="edit-btn" data-index="${task.index}">Edit</button>
+                <button class="delete-btn" data-index="${task.index}">Delete</button>
             </div>
         `;
 
@@ -90,92 +128,92 @@ function displayTodo() {
     updateProgress();
 }
 
-// Add or save task
+// --- Add / Save Task ---
 function handleAddtask() {
-    const textValue = inputbox.value.trim();
-    if (textValue.length === 0) return;
+    if (!inputbox) return;
+    const textVal = inputbox.value.trim();
+    if (textVal.length === 0) return;
 
-    const selectedCategory = categorySelect.value;
+    const catVal = categorySelect ? categorySelect.value : "Work";
 
     if (editingIndex !== null && editingIndex >= 0 && editingIndex < storedTodo.length) {
-        // Edit existing task
-        storedTodo[editingIndex].text = textValue;
-        storedTodo[editingIndex].category = selectedCategory;
+        storedTodo[editingIndex].text = textVal;
+        if (categorySelect) storedTodo[editingIndex].category = catVal;
         editingIndex = null;
-        addbtn.textContent = "Add";
+        if (addbtn) addbtn.textContent = "Add";
     } else {
-        // Add new task
         storedTodo.push({
-            text: textValue,
-            category: selectedCategory,
+            text: textVal,
+            category: catVal,
             completed: false
         });
     }
 
-    saveToLocalStorage();
+    saveTodos();
     displayTodo();
 
     inputbox.value = "";
-    categorySelect.value = "Work";
+    if (categorySelect) categorySelect.value = "Work";
     inputbox.focus();
 }
 
-// Handle checkbox toggle, edit, and delete
+// --- List Event Delegation (Checkbox, Edit, Delete) ---
 function handleListAction(e) {
     // Checkbox toggle
     if (e.target.classList.contains("task-checkbox")) {
         const index = Number(e.target.dataset.index);
         if (!isNaN(index) && storedTodo[index]) {
             storedTodo[index].completed = e.target.checked;
-            saveToLocalStorage();
+            saveTodos();
             displayTodo();
         }
         return;
     }
 
-    // Delete task
+    // Delete
     if (e.target.classList.contains("delete-btn")) {
         const index = Number(e.target.dataset.index);
         if (!isNaN(index) && storedTodo[index]) {
             if (editingIndex === index) {
                 editingIndex = null;
-                addbtn.textContent = "Add";
-                inputbox.value = "";
+                if (addbtn) addbtn.textContent = "Add";
+                if (inputbox) inputbox.value = "";
             } else if (editingIndex !== null && editingIndex > index) {
                 editingIndex--;
             }
 
             storedTodo.splice(index, 1);
-            saveToLocalStorage();
+            saveTodos();
             displayTodo();
         }
         return;
     }
 
-    // Edit task
+    // Edit
     if (e.target.classList.contains("edit-btn")) {
         const index = Number(e.target.dataset.index);
         if (!isNaN(index) && storedTodo[index]) {
             editingIndex = index;
-            inputbox.value = storedTodo[index].text;
-            categorySelect.value = storedTodo[index].category || "Work";
-            addbtn.textContent = "Save";
-            inputbox.focus();
+            if (inputbox) inputbox.value = storedTodo[index].text;
+            if (categorySelect) categorySelect.value = storedTodo[index].category || "Work";
+            if (addbtn) addbtn.textContent = "Save";
+            if (inputbox) inputbox.focus();
         }
         return;
     }
 }
 
 // Event Listeners
-addbtn.addEventListener("click", handleAddtask);
-todolist.addEventListener("click", handleListAction);
+if (addbtn) addbtn.addEventListener("click", handleAddtask);
+if (todolist) todolist.addEventListener("click", handleListAction);
 
-// Press Enter to add/save task
-inputbox.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        handleAddtask();
-    }
-});
+if (inputbox) {
+    inputbox.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            handleAddtask();
+        }
+    });
+}
 
 // Initial render
 displayTodo();
