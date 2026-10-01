@@ -1,26 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>To Do List</title>
     <link rel="stylesheet" href="./style.css">
 </head>
+
 <body>
 
     <div id="input-container">
-        <h3>TODO list</h3>
-        <section id="inner_cont"><input id="input" id="text" placeholder="Enter the list">
-        <button id="addbtn">ADD</button></section>
+        <h3>To Do List</h3>
+        <section id="inner_cont">
+            <input id="input" type="text" placeholder="Add a new task..." aria-label="Task input" />
+            <button id="addbtn" type="button">Add</button>
+        </section>
+        <div id="task-info">
+            <span id="task-count" aria-live="polite">0 tasks remaining</span>
+            <button id="clear-completed" type="button">Clear Completed</button>
+        </div>
     </div>
 
     <div id="todo-container">
-        <ul>
-           
-        </ul>
+        <ul aria-live="polite"></ul>
     </div>
 
-    
+
     <script src="./script.js"></script>
 </body>
+
 </html>
