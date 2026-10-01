@@ -18,18 +18,46 @@
                 <span>Task</span>
                 <input id="task-input" type="text" placeholder="What needs doing?" required>
             </label>
-            <label class="task-field" for="due-date">
-                <span>Due date</span>
-                <input id="due-date" type="date">
-            </label>
-            <label class="task-field" for="priority">
-                <span>Priority</span>
-                <select id="priority">
-                    <option value="High">High</option>
-                    <option value="Medium" selected>Medium</option>
-                    <option value="Low">Low</option>
-                </select>
-            </label>
+            <div class="task-field due-date-field">
+                <span id="due-date-caption">Due date</span>
+                <input id="due-date" type="hidden">
+                <button id="due-date-trigger" type="button" aria-labelledby="due-date-caption due-date-label" aria-haspopup="dialog" aria-expanded="false" aria-controls="calendar-popover">
+                    <span id="due-date-label">Choose a date</span>
+                    <span class="calendar-mark" aria-hidden="true"><span>31</span></span>
+                </button>
+                <div id="calendar-popover" role="dialog" aria-label="Choose due date" hidden>
+                    <div class="calendar-header">
+                        <button id="calendar-previous" type="button" aria-label="Previous month">&lsaquo;</button>
+                        <h2 id="calendar-month"></h2>
+                        <button id="calendar-next" type="button" aria-label="Next month">&rsaquo;</button>
+                    </div>
+                    <div class="calendar-weekdays" aria-hidden="true">
+                        <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+                    </div>
+                    <div id="calendar-days" class="calendar-days" role="group" aria-label="Calendar days"></div>
+                    <div class="calendar-footer">
+                        <button id="calendar-clear" type="button">Clear</button>
+                        <button id="calendar-today" type="button">Today</button>
+                    </div>
+                </div>
+            </div>
+            <fieldset class="task-field priority-field">
+                <legend>Priority</legend>
+                <div class="priority-options">
+                    <label class="priority-choice priority-high">
+                        <input type="radio" name="priority" value="High">
+                        <span>High</span>
+                    </label>
+                    <label class="priority-choice priority-medium">
+                        <input type="radio" name="priority" value="Medium" checked>
+                        <span>Medium</span>
+                    </label>
+                    <label class="priority-choice priority-low">
+                        <input type="radio" name="priority" value="Low">
+                        <span>Low</span>
+                    </label>
+                </div>
+            </fieldset>
             <button id="addbtn" type="submit">ADD</button>
         </form>
 

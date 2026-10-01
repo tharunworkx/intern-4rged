@@ -1,11 +1,116 @@
+if (typeof document === "undefined") {
+    console.error("This is browser code. Open index.html in a browser instead of running script.js with Node.");
+    process.exit(0);
+}
+
 const inputbox = document.getElementById("task-input");
 const dueDateInput = document.getElementById("due-date");
-const priorityInput = document.getElementById("priority");
+const dueDateTrigger = document.getElementById("due-date-trigger");
+const dueDateLabel = document.getElementById("due-date-label");
+const calendarPopover = document.getElementById("calendar-popover");
+const calendarMonth = document.getElementById("calendar-month");
+const calendarDays = document.getElementById("calendar-days");
+const calendarDateFormatter = new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+});
+const priorityInputs = document.querySelectorAll('input[name="priority"]');
 const taskForm = document.getElementById("task-form");
 const addbtn = document.getElementById("addbtn");
 const todolist = document.querySelector("#todo-container ul");
 const themeToggle = document.getElementById("theme-toggle");
 let editingIndex = null;
+const currentDate = new Date();
+let visibleMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+
+function toISODate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function parseISODate(value) {
+    if (!value) return null;
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, month - 1, day);
+}
+
+function updateDueDateLabel() {
+    const selectedDate = parseISODate(dueDateInput.value);
+    dueDateLabel.textContent = selectedDate
+        ? calendarDateFormatter.format(selectedDate)
+        : "Choose a date";
+    dueDateTrigger.classList.toggle("has-date", Boolean(selectedDate));
+}
+
+function renderCalendar() {
+    const year = visibleMonth.getFullYear();
+    const month = visibleMonth.getMonth();
+    const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const selectedDate = dueDateInput.value;
+    const today = toISODate(new Date());
+    const cellCount = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+
+    calendarMonth.textContent = new Intl.DateTimeFormat(undefined, {
+        month: "long",
+        year: "numeric"
+    }).format(visibleMonth);
+    calendarDays.replaceChildren();
+
+    for (let cell = 0; cell < cellCount; cell += 1) {
+        const day = cell - firstWeekday + 1;
+        if (day < 1 || day > daysInMonth) {
+            const spacer = document.createElement("span");
+            spacer.setAttribute("aria-hidden", "true");
+            calendarDays.append(spacer);
+            continue;
+        }
+
+        const date = new Date(year, month, day);
+        const isoDate = toISODate(date);
+        const dayButton = document.createElement("button");
+        dayButton.type = "button";
+        dayButton.className = "calendar-day";
+        dayButton.dataset.date = isoDate;
+        dayButton.textContent = String(day);
+        dayButton.setAttribute("aria-label", calendarDateFormatter.format(date));
+        dayButton.setAttribute("aria-pressed", String(isoDate === selectedDate));
+
+        if (isoDate === selectedDate) dayButton.classList.add("is-selected");
+        if (isoDate === today) {
+            dayButton.classList.add("is-today");
+            dayButton.setAttribute("aria-current", "date");
+        }
+
+        const focusDate = selectedDate || (year === new Date().getFullYear() && month === new Date().getMonth() ? today : toISODate(new Date(year, month, 1)));
+        dayButton.tabIndex = isoDate === focusDate ? 0 : -1;
+        calendarDays.append(dayButton);
+    }
+}
+
+function closeCalendar(returnFocus = false) {
+    calendarPopover.hidden = true;
+    dueDateTrigger.setAttribute("aria-expanded", "false");
+    if (returnFocus) dueDateTrigger.focus();
+}
+
+function changeCalendarMonth(offset) {
+    visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + offset, 1);
+    renderCalendar();
+}
+
+function getSelectedPriority() {
+    return document.querySelector('input[name="priority"]:checked')?.value || "Medium";
+}
+
+function setSelectedPriority(priority) {
+    priorityInputs.forEach((input) => {
+        input.checked = input.value === priority;
+    });
+}
 
 let storedTodo = (JSON.parse(localStorage.getItem("todos")) || []).map((task) =>
     typeof task === "string"
@@ -25,6 +130,8 @@ function saveTodos() {
 
 function resetForm() {
     taskForm.reset();
+    updateDueDateLabel();
+    closeCalendar();
     addbtn.textContent = "ADD";
     editingIndex = null;
 }
@@ -34,7 +141,7 @@ function handleAddTask(event) {
     const task = {
         text: inputbox.value.trim(),
         dueDate: dueDateInput.value,
-        priority: priorityInput.value
+        priority: getSelectedPriority()
     };
 
     if (!task.text) return;
@@ -72,11 +179,7 @@ function displayTodo() {
         if (task.dueDate) {
             const dueDate = document.createElement("time");
             dueDate.dateTime = task.dueDate;
-            dueDate.textContent = `Due ${new Date(`${task.dueDate}T00:00:00`).toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-                year: "numeric"
-            })}`;
+            dueDate.textContent = `Due ${calendarDateFormatter.format(parseISODate(task.dueDate))}`;
             metadata.append(dueDate);
         }
 
@@ -120,7 +223,8 @@ function handleTaskAction(event) {
     editingIndex = index;
     inputbox.value = task.text;
     dueDateInput.value = task.dueDate;
-    priorityInput.value = task.priority;
+    updateDueDateLabel();
+    setSelectedPriority(task.priority);
     addbtn.textContent = "Save";
     inputbox.focus();
 }
@@ -134,9 +238,64 @@ function setTheme(isDark) {
 
 taskForm.addEventListener("submit", handleAddTask);
 todolist.addEventListener("click", handleTaskAction);
+dueDateTrigger.addEventListener("click", () => {
+    if (!calendarPopover.hidden) {
+        closeCalendar();
+        return;
+    }
+
+    const selectedDate = parseISODate(dueDateInput.value);
+    visibleMonth = selectedDate
+        ? new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
+        : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    renderCalendar();
+    calendarPopover.hidden = false;
+    dueDateTrigger.setAttribute("aria-expanded", "true");
+});
+calendarDays.addEventListener("click", (event) => {
+    const dayButton = event.target.closest("button[data-date]");
+    if (!dayButton) return;
+
+    dueDateInput.value = dayButton.dataset.date;
+    updateDueDateLabel();
+    closeCalendar(true);
+});
+calendarDays.addEventListener("keydown", (event) => {
+    const movement = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[event.key];
+    const focusedDay = event.target.closest("button[data-date]");
+    if (!movement || !focusedDay) return;
+
+    event.preventDefault();
+    const nextDate = parseISODate(focusedDay.dataset.date);
+    nextDate.setDate(nextDate.getDate() + movement);
+    if (nextDate.getMonth() !== visibleMonth.getMonth() || nextDate.getFullYear() !== visibleMonth.getFullYear()) {
+        visibleMonth = new Date(nextDate.getFullYear(), nextDate.getMonth(), 1);
+        renderCalendar();
+    }
+    calendarDays.querySelector(`[data-date="${toISODate(nextDate)}"]`)?.focus();
+});
+document.getElementById("calendar-previous").addEventListener("click", () => changeCalendarMonth(-1));
+document.getElementById("calendar-next").addEventListener("click", () => changeCalendarMonth(1));
+document.getElementById("calendar-clear").addEventListener("click", () => {
+    dueDateInput.value = "";
+    updateDueDateLabel();
+    closeCalendar(true);
+});
+document.getElementById("calendar-today").addEventListener("click", () => {
+    dueDateInput.value = toISODate(new Date());
+    updateDueDateLabel();
+    closeCalendar(true);
+});
+document.addEventListener("click", (event) => {
+    if (!event.target.closest(".due-date-field")) closeCalendar();
+});
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !calendarPopover.hidden) closeCalendar(true);
+});
 themeToggle.addEventListener("click", () => {
     setTheme(document.documentElement.dataset.theme !== "dark");
 });
 
 setTheme(localStorage.getItem("theme") === "dark");
+updateDueDateLabel();
 displayTodo();
