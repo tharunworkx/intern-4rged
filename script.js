@@ -1,4 +1,4 @@
-﻿// ==========================================
+// ==========================================
 // 4RGED TODO — SCRIPT LOGIC (CLEAN & MINIMALIST)
 // ==========================================
 
@@ -95,8 +95,14 @@ const todolist = document.querySelector("#task-list") || document.querySelector(
 const filterBtns = document.querySelectorAll(".filter-btn");
 const quickAddBtn = document.getElementById("quick-add-btn");
 
+// Modal Elements
+const deleteModal = document.getElementById("delete-modal");
+const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
+const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
+
 let editingIndex = null;
 let currentFilter = "all";
+let taskToDeleteIndex = null;
 
 // Load stored todos with backward compatibility
 function getStoredTodos() {
@@ -143,15 +149,18 @@ function handleAddtask() {
     displayTodo();
 }
 
-// Display Todos with Clearly Defined Boxes
+// Display Todos with Clearly Defined Boxes & Empty State Illustration
 function displayTodo() {
     todolist.innerHTML = "";
+
+    let visibleTasks = 0;
 
     storedTodo.forEach((task, index) => {
         // Filter logic: All / Active / Completed
         if (currentFilter === "active" && task.completed) return;
         if (currentFilter === "completed" && !task.completed) return;
 
+        visibleTasks++;
         const isDone = task.completed;
         const list = document.createElement("li");
         list.setAttribute("data-index", index);
@@ -178,6 +187,53 @@ function displayTodo() {
         `;
         todolist.appendChild(list);
     });
+
+    // Feature 1: Empty State Illustration
+    if (visibleTasks === 0) {
+        let filterName = currentFilter === "active" ? "active " : (currentFilter === "completed" ? "completed " : "");
+        todolist.innerHTML = `
+            <li class="empty-state-card">
+                <div class="empty-state-icon">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <h3 class="empty-state-title">No ${filterName}tasks found</h3>
+                <p class="empty-state-desc">You're all caught up! Add a new task above to stay productive.</p>
+            </li>
+        `;
+    }
+}
+
+// Open Delete Confirmation Modal
+function openDeleteModal(index) {
+    taskToDeleteIndex = index;
+    if (deleteModal) {
+        deleteModal.classList.remove("hidden");
+    }
+}
+
+// Close Delete Confirmation Modal
+function closeDeleteModal() {
+    taskToDeleteIndex = null;
+    if (deleteModal) {
+        deleteModal.classList.add("hidden");
+    }
+}
+
+// Perform Delete after confirmation
+function confirmDeleteTask() {
+    if (taskToDeleteIndex !== null && taskToDeleteIndex >= 0 && taskToDeleteIndex < storedTodo.length) {
+        storedTodo.splice(taskToDeleteIndex, 1);
+        if (editingIndex === taskToDeleteIndex) {
+            editingIndex = null;
+            addbtn.innerHTML = "ADD";
+            inputbox.value = "";
+        } else if (editingIndex !== null && editingIndex > taskToDeleteIndex) {
+            editingIndex--;
+        }
+        saveTodos();
+        displayTodo();
+    }
+    closeDeleteModal();
 }
 
 // Event Delegation for Task Actions (Checkbox, Edit, Delete)
@@ -200,16 +256,9 @@ function handleUpdate(e) {
         return;
     }
 
-    // 2. Delete Task
+    // 2. Delete Task (Triggers Confirmation Modal)
     if (e.target.classList.contains("delete-btn") || e.target.closest(".delete-btn")) {
-        storedTodo.splice(index, 1);
-        if (editingIndex === index) {
-            editingIndex = null;
-            addbtn.innerHTML = "ADD";
-            inputbox.value = "";
-        }
-        saveTodos();
-        displayTodo();
+        openDeleteModal(index);
         return;
     }
 
@@ -247,6 +296,28 @@ if (quickAddBtn) {
         inputbox.focus();
     });
 }
+
+// Modal Event Listeners (Feature 2)
+if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener("click", confirmDeleteTask);
+}
+if (cancelDeleteBtn) {
+    cancelDeleteBtn.addEventListener("click", closeDeleteModal);
+}
+if (deleteModal) {
+    deleteModal.addEventListener("click", (e) => {
+        if (e.target === deleteModal) {
+            closeDeleteModal();
+        }
+    });
+}
+
+// Keyboard shortcuts (Escape closes modal)
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && deleteModal && !deleteModal.classList.contains("hidden")) {
+        closeDeleteModal();
+    }
+});
 
 // Event Listeners
 addbtn.addEventListener("click", handleAddtask);
