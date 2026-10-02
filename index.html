@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TASKS TODO</title>
+    <title>Tasktide | Focus and Tasks</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,94 +12,119 @@
 </head>
 <body>
     <div class="window-container">
-        <aside class="sidebar" aria-label="Task navigation">
+        <aside class="sidebar">
             <div class="sidebar-top">
-                <span class="sidebar-brand">TASKS TODO</span>
+                <div class="sidebar-brand">
+                    <div class="brand-icon-box" aria-hidden="true"><i class="fa-solid fa-compass-drafting"></i></div>
+                    <div class="brand-details">
+                        <span class="brand-title">Tasktide</span>
+                    </div>
+                </div>
             </div>
-            <nav class="sidebar-nav" aria-label="Task status filters">
-                <button class="nav-item filter-btn active" type="button" data-filter="all" aria-pressed="true">
-                    <i class="fa-solid fa-inbox" aria-hidden="true"></i><span>All Tasks</span>
+
+            <nav id="sidebar-nav" class="sidebar-nav" aria-label="Task views">
+                <button id="open-add-task" class="nav-item" type="button">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add task</span>
                 </button>
-                <button class="nav-item filter-btn" type="button" data-filter="active" aria-pressed="false">
-                    <i class="fa-regular fa-circle-dot" aria-hidden="true"></i><span>Active</span>
+                <button class="nav-item task-view-filter active is-active" type="button" data-filter="active" aria-pressed="true">
+                    <i class="fa-regular fa-circle-dot" aria-hidden="true"></i><span>Active tasks</span>
                 </button>
-                <button class="nav-item filter-btn" type="button" data-filter="completed" aria-pressed="false">
-                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>Completed</span>
+                <button class="nav-item task-view-filter" type="button" data-filter="completed" aria-pressed="false">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>Completed tasks</span>
+                </button>
+                <button class="nav-item task-view-filter" type="button" data-filter="deleted" aria-pressed="false">
+                    <i class="fa-regular fa-trash-can" aria-hidden="true"></i><span>Trash</span>
                 </button>
             </nav>
-            <div class="sidebar-bottom">
-                <button id="quick-add-btn" class="floating-add-btn" type="button" aria-label="Add new task" title="Add new task">
-                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
-                </button>
-            </div>
+
         </aside>
 
         <main class="main-content">
             <header class="content-header">
+                <button id="menu-toggle" type="button" aria-label="Open task menu" aria-expanded="false" aria-controls="sidebar-nav">
+                    <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                </button>
                 <div class="header-titles">
-                    <span class="sub-badge">YOUR DAILY WORKSPACE</span>
-                    <h1 class="main-title">Tasks</h1>
+                    <h1 id="page-section-title" class="main-title">Active tasks</h1>
                 </div>
                 <div class="header-actions">
-                    <label class="search-box" for="search-input">
-                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                        <input id="search-input" type="search" placeholder="Search tasks..." aria-label="Search tasks by text, category, due date, or priority">
-                    </label>
-                    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode" aria-pressed="false">
+                    <div class="reminder-control">
+                        <button id="reminders-toggle" class="header-icon-button" type="button" aria-label="Open reminders" aria-expanded="false" aria-controls="reminders-panel">
+                            <i class="fa-regular fa-bell" aria-hidden="true"></i>
+                            <span id="reminder-count" class="reminder-count" hidden>0</span>
+                        </button>
+                        <section id="reminders-panel" class="reminders-panel" role="dialog" aria-label="Task reminders" hidden>
+                            <div class="reminders-panel-header">
+                                <h2>Reminders</h2>
+                                <button id="enable-notifications" class="notification-permission" type="button">Enable browser alerts</button>
+                            </div>
+                            <p id="notification-status" class="notification-status">Reminders appear here while Tasktide is open.</p>
+                            <div id="reminder-list" class="reminder-list" aria-live="polite"></div>
+                        </section>
+                    </div>
+                    <button id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode" aria-pressed="false">
                         <i id="theme-icon" class="fa-solid fa-moon" aria-hidden="true"></i>
                     </button>
                 </div>
             </header>
 
-            <form id="task-form">
-                <div id="input-container">
-                    <div id="inner_cont">
-                        <label class="input-field-box task-name" for="task-input">
-                            <i class="fa-solid fa-pen-to-square input-icon" aria-hidden="true"></i>
-                            <input id="task-input" type="text" placeholder="What needs doing?" autocomplete="off" required>
-                        </label>
-                        <label class="task-field category-field" for="category-select">
-                            <span>Category</span>
-                            <select id="category-select">
-                                <option value="Work">Work</option>
-                                <option value="Personal">Personal</option>
-                                <option value="Urgent">Urgent</option>
-                            </select>
-                        </label>
-                        <div class="task-field due-date-field">
-                            <span id="due-date-caption">Due date</span>
-                            <input id="due-date" type="hidden">
-                            <button id="due-date-trigger" type="button" aria-labelledby="due-date-caption due-date-label" aria-haspopup="dialog" aria-expanded="false" aria-controls="calendar-popover">
-                                <span id="due-date-label">Choose a date</span>
-                                <span class="calendar-mark" aria-hidden="true"><span>31</span></span>
-                            </button>
-                            <div id="calendar-popover" role="dialog" aria-label="Choose due date" hidden>
-                                <div class="calendar-header">
-                                    <button id="calendar-previous" type="button" aria-label="Previous month">&lsaquo;</button>
-                                    <h2 id="calendar-month"></h2>
-                                    <button id="calendar-next" type="button" aria-label="Next month">&rsaquo;</button>
-                                </div>
-                                <div class="calendar-weekdays" aria-hidden="true">
-                                    <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
-                                </div>
-                                <div id="calendar-days" class="calendar-days" role="group" aria-label="Calendar days"></div>
-                                <div class="calendar-footer">
-                                    <button id="calendar-clear" type="button">Clear</button>
-                                    <button id="calendar-today" type="button">Today</button>
-                                </div>
-                            </div>
+            <form id="task-form" hidden>
+                <p id="task-form-error" class="task-form-error" role="alert" hidden></p>
+                <label class="task-field task-name" for="task-input">
+                    <span>Task</span>
+                    <input id="task-input" type="text" placeholder="What needs doing?" aria-describedby="task-form-error" required>
+                </label>
+                <label class="task-field task-notes" for="task-notes">
+                    <span>Notes</span>
+                    <textarea id="task-notes" rows="1" placeholder="Add details..."></textarea>
+                </label>
+                <div class="task-field due-date-field">
+                    <span id="due-date-caption">Due date</span>
+                    <input id="due-date" type="hidden">
+                    <button id="due-date-trigger" type="button" aria-labelledby="due-date-caption due-date-label" aria-haspopup="dialog" aria-expanded="false" aria-controls="calendar-popover">
+                        <span id="due-date-label">Choose a date</span>
+                        <span class="calendar-mark" aria-hidden="true"><span>31</span></span>
+                    </button>
+                    <div id="calendar-popover" role="dialog" aria-label="Choose due date" hidden>
+                        <div class="calendar-header">
+                            <button id="calendar-previous" type="button" aria-label="Previous month">&lsaquo;</button>
+                            <h2 id="calendar-month"></h2>
+                            <button id="calendar-next" type="button" aria-label="Next month">&rsaquo;</button>
                         </div>
-                        <fieldset class="task-field priority-field">
-                            <legend>Priority</legend>
-                            <div class="priority-options">
-                                <label class="priority-choice priority-high"><input type="radio" name="priority" value="High"><span>High</span></label>
-                                <label class="priority-choice priority-medium"><input type="radio" name="priority" value="Medium" checked><span>Medium</span></label>
-                                <label class="priority-choice priority-low"><input type="radio" name="priority" value="Low"><span>Low</span></label>
-                            </div>
-                        </fieldset>
-                        <button id="addbtn" type="submit"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>ADD</span></button>
+                        <div class="calendar-weekdays" aria-hidden="true">
+                            <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+                        </div>
+                        <div id="calendar-days" class="calendar-days" role="group" aria-label="Calendar days"></div>
+                        <div class="calendar-footer">
+                            <button id="calendar-clear" type="button">Clear</button>
+                            <button id="calendar-today" type="button">Today</button>
+                        </div>
                     </div>
                 </div>
+                <fieldset class="task-field priority-field">
+                    <legend>Priority</legend>
+                    <div class="priority-options">
+                        <label class="priority-choice priority-high"><input type="radio" name="priority" value="High"><span>High</span></label>
+                        <label class="priority-choice priority-medium"><input type="radio" name="priority" value="Medium" checked><span>Medium</span></label>
+                        <label class="priority-choice priority-low"><input type="radio" name="priority" value="Low"><span>Low</span></label>
+                    </div>
+                </fieldset>
+                <div class="task-field category-field">
+                    <span id="category-caption">Category</span>
+                    <input id="category-select" type="hidden" value="Work">
+                    <div class="category-picker">
+                        <button id="category-trigger" class="category-trigger" type="button" aria-labelledby="category-caption category-value" aria-haspopup="listbox" aria-expanded="false" aria-controls="category-options">
+                            <span id="category-value">Work</span>
+                            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <div id="category-options" class="category-options" role="listbox" aria-labelledby="category-caption" hidden>
+                            <button class="category-option tag-work" type="button" role="option" data-category="Work" aria-selected="true">Work</button>
+                            <button class="category-option tag-personal" type="button" role="option" data-category="Personal" aria-selected="false">Personal</button>
+                            <button class="category-option tag-urgent" type="button" role="option" data-category="Urgent" aria-selected="false">Urgent</button>
+                        </div>
+                    </div>
+                </div>
+                <button id="addbtn" type="submit">ADD</button>
             </form>
 
             <section id="progress-container" aria-label="Task progress">
@@ -107,43 +132,94 @@
                     <span class="progress-title">Task progress</span>
                     <span id="progress-stats">0% completed (0/0)</span>
                 </div>
-                <div class="progress-track"><div id="progress-bar"></div></div>
+                <div class="progress-track" role="progressbar" aria-label="Tasks completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div id="progress-bar"></div>
+                </div>
+            </section>
+
+            <section class="motivation-strip" aria-label="Motivation">
+                <p id="motivation-quote" aria-live="polite"></p>
+                <button id="next-motivation" class="motivation-next" type="button" aria-label="Show another quote" title="Another quote">
+                    <i class="fa-solid fa-arrow-rotate-right" aria-hidden="true"></i>
+                </button>
             </section>
 
             <section id="todo-container" aria-label="Tasks">
-                <div class="section-heading">
-                    <h2 id="section-heading-text">Task Items</h2>
-                    <span id="task-count" class="task-count">0 tasks</span>
+                <div id="task-focus-bar" class="task-focus-bar" hidden>
+                    <span><i class="fa-solid fa-filter" aria-hidden="true"></i> Showing one task</span>
+                    <button id="clear-task-focus" type="button">Show all tasks</button>
+                </div>
+                <div class="filter-bar">
+                    <label class="visually-hidden" for="search-input">Search tasks</label>
+                    <input id="search-input" type="search" placeholder="Search tasks..." autocomplete="off">
+                    <div class="task-toolbar" aria-label="Task display controls">
+                        <div class="control-drawer" id="sort-drawer">
+                            <button id="sort-trigger" class="toolbar-trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="sort-menu">
+                                <i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i><span>Sort</span><i class="fa-solid fa-chevron-down drawer-chevron" aria-hidden="true"></i>
+                            </button>
+                            <div id="sort-menu" class="control-menu sort-menu" role="menu" hidden>
+                                <button class="menu-option" type="button" role="menuitem" data-sort="created-newest">Recently added</button>
+                                <button class="menu-option" type="button" role="menuitem" data-sort="created-oldest">Oldest added</button>
+                                <div class="sort-submenu">
+                                    <button class="menu-option submenu-trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="priority-sort-options">
+                                        <span>Priority</span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                                    </button>
+                                    <div id="priority-sort-options" class="submenu-options" role="menu" hidden>
+                                        <button class="menu-option" type="button" role="menuitem" data-sort="priority-high">High to low</button>
+                                        <button class="menu-option" type="button" role="menuitem" data-sort="priority-low">Low to high</button>
+                                    </div>
+                                </div>
+                                <button class="menu-option" type="button" role="menuitem" data-sort="due-soonest">Due date: soonest</button>
+                                <button class="menu-option" type="button" role="menuitem" data-sort="due-latest">Due date: latest</button>
+                                <div class="sort-submenu">
+                                    <button class="menu-option submenu-trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="category-sort-options">
+                                        <span>Category</span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                                    </button>
+                                    <div id="category-sort-options" class="submenu-options" role="menu" hidden>
+                                        <button class="menu-option" type="button" role="menuitem" data-sort="category-work">Work first</button>
+                                        <button class="menu-option" type="button" role="menuitem" data-sort="category-personal">Personal first</button>
+                                        <button class="menu-option" type="button" role="menuitem" data-sort="category-urgent">Urgent first</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="control-drawer" id="view-drawer">
+                            <button id="view-trigger" class="toolbar-trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="view-menu">
+                                <i class="fa-solid fa-table-list" aria-hidden="true"></i><span>View</span><i class="fa-solid fa-chevron-down drawer-chevron" aria-hidden="true"></i>
+                            </button>
+                            <div id="view-menu" class="control-menu" role="menu" hidden>
+                                <button class="menu-option" type="button" role="menuitemradio" aria-checked="true" data-view="table">Table</button>
+                                <button class="menu-option" type="button" role="menuitemradio" aria-checked="false" data-view="cards">Cards</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="task-table-wrap">
                     <table id="todo-table">
-                        <caption class="visually-hidden">Tasks with category, due date, priority, status, and actions</caption>
+                        <caption class="visually-hidden">Saved tasks with notes, categories, due dates, and priorities</caption>
+                        <colgroup>
+                            <col class="task-number-column">
+                            <col class="task-name-column">
+                            <col class="task-category-column">
+                            <col class="task-due-column">
+                            <col class="task-priority-column">
+                        </colgroup>
                         <thead>
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">Task</th>
-                                <th scope="col">Category</th>
-                                <th scope="col">Due date</th>
-                                <th scope="col">Priority</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Actions</th>
-                            </tr>
+                            <tr><th scope="col">#</th><th scope="col">Task</th><th scope="col">Category</th><th scope="col">Due date</th><th scope="col">Priority</th></tr>
                         </thead>
                         <tbody aria-live="polite"></tbody>
                     </table>
                 </div>
-                <div id="filter-empty-state" class="filter-empty-state" role="status" aria-live="polite" hidden>
-                    <span class="empty-state-icon"><i id="empty-state-icon" class="fa-solid fa-clipboard-list" aria-hidden="true"></i></span>
-                    <h3 id="empty-state-title">Your list is clear</h3>
-                    <p id="empty-state-message">Add a task to get started.</p>
-                </div>
+                <div id="task-cards" class="task-cards" aria-live="polite" hidden></div>
             </section>
         </main>
     </div>
+    <div id="reminder-toast" class="reminder-toast" role="status" aria-live="polite" hidden></div>
+    <button id="drawer-backdrop" class="drawer-backdrop" type="button" aria-label="Close task menu" hidden></button>
     <div id="delete-modal" class="delete-modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title" hidden>
         <div class="delete-modal-box">
             <h2 id="delete-modal-title">Are you sure?</h2>
-            <p>This task will be deleted.</p>
+            <p id="delete-modal-message">This task will be moved to Trash.</p>
             <div class="delete-modal-actions">
                 <button id="cancel-delete" class="modal-btn modal-cancel-btn" type="button">Cancel</button>
                 <button id="confirm-delete" class="modal-btn modal-delete-btn" type="button">Delete</button>
