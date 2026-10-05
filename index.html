@@ -3,143 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4rged Todo</title>
+    <title>Task Dashboard - Todo.ai</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <div class="window-container">
+    <div class="app-fullscreen-layout">
         <aside class="sidebar">
             <div class="sidebar-top">
-                <div class="sidebar-brand">
-                    <div class="brand-icon-box" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></div>
-                    <div class="brand-details">
-                        <span class="brand-title">4rged</span>
-                        <span class="brand-subtitle">WORKSPACE</span>
-                    </div>
-                </div>
+                <button class="brand-logo-btn" type="button" id="logo-home-btn" aria-label="Task Dashboard" title="Task Dashboard">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z"></path></svg>
+                </button>
             </div>
 
             <nav class="sidebar-nav" aria-label="Task views">
-                <button class="nav-item task-view-filter active is-active" type="button" data-filter="all" aria-pressed="true">
-                    <i class="fa-solid fa-inbox" aria-hidden="true"></i><span>All tasks</span>
+                <button class="sidebar-icon-btn task-view-filter active is-active" type="button" data-filter="all" aria-label="All tasks" title="All Tasks">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
                 </button>
-                <button class="nav-item task-view-filter" type="button" data-filter="active" aria-pressed="false">
-                    <i class="fa-regular fa-circle-dot" aria-hidden="true"></i><span>Active</span>
+                <button class="sidebar-icon-btn task-view-filter" type="button" data-filter="active" aria-label="Active tasks" title="Active Tasks">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 </button>
-                <button class="nav-item task-view-filter" type="button" data-filter="completed" aria-pressed="false">
-                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>Completed</span>
+                <button class="sidebar-icon-btn task-view-filter" type="button" data-filter="completed" aria-label="Completed tasks" title="Completed Tasks">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                 </button>
             </nav>
 
             <div class="sidebar-bottom">
-                <button id="quick-add-btn" class="floating-add-btn" type="button" aria-label="Add new task" title="Add new task">
-                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                <button class="sidebar-icon-btn add-quick-btn" id="quick-add-btn" type="button" aria-label="Add new task" title="Add Task">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </button>
+                <div class="theme-switch-pill" id="theme-toggle" role="button" tabindex="0" aria-label="Toggle dark mode" title="Toggle dark/light theme">
+                    <span class="theme-icon moon-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
+                    <span class="theme-icon sun-icon active-theme-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></span>
+                </div>
             </div>
         </aside>
 
         <main class="main-content">
             <header class="content-header">
-                <div class="header-titles">
-                    <span class="sub-badge">PERSONAL ORGANIZER</span>
-                    <h1 class="main-title">Task dashboard</h1>
+                <div class="header-left">
+                    <h1 class="main-title">Tasks</h1>
                 </div>
-                <button id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode" aria-pressed="false">
-                    <i id="theme-icon" class="fa-solid fa-moon" aria-hidden="true"></i>
-                </button>
+
+                <div class="header-right">
+                    <div class="search-bar-pill">
+                        <span class="search-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+                        <input id="search-input" type="search" placeholder="Search tasks..." autocomplete="off" aria-label="Search tasks">
+                    </div>
+                    <button id="toggle-form-btn" class="add-task-trigger-btn" type="button">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> <span>New Task</span>
+                    </button>
+                </div>
             </header>
 
-            <form id="task-form">
-                <label class="task-field task-name" for="task-input">
-                    <span>Task</span>
-                    <input id="task-input" type="text" placeholder="What needs doing?" required>
-                </label>
-                <div class="task-field due-date-field">
-                    <span id="due-date-caption">Due date</span>
-                    <input id="due-date" type="hidden">
-                    <button id="due-date-trigger" type="button" aria-labelledby="due-date-caption due-date-label" aria-haspopup="dialog" aria-expanded="false" aria-controls="calendar-popover">
-                        <span id="due-date-label">Choose a date</span>
-                        <span class="calendar-mark" aria-hidden="true"><span>31</span></span>
+            <div class="filter-tabs-row">
+                <nav class="filter-tabs-group" aria-label="Filter tasks by status">
+                    <button class="tab-pill task-view-filter active is-active" type="button" data-filter="all" aria-pressed="true">
+                        <span class="tab-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></span>
+                        <span class="tab-label">All tasks</span>
+                        <span class="tab-badge" id="count-all">0</span>
                     </button>
-                    <div id="calendar-popover" role="dialog" aria-label="Choose due date" hidden>
-                        <div class="calendar-header">
-                            <button id="calendar-previous" type="button" aria-label="Previous month">&lsaquo;</button>
-                            <h2 id="calendar-month"></h2>
-                            <button id="calendar-next" type="button" aria-label="Next month">&rsaquo;</button>
-                        </div>
-                        <div class="calendar-weekdays" aria-hidden="true">
-                            <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
-                        </div>
-                        <div id="calendar-days" class="calendar-days" role="group" aria-label="Calendar days"></div>
-                        <div class="calendar-footer">
-                            <button id="calendar-clear" type="button">Clear</button>
-                            <button id="calendar-today" type="button">Today</button>
-                        </div>
-                    </div>
-                </div>
-                <fieldset class="task-field priority-field">
-                    <legend>Priority</legend>
-                    <div class="priority-options">
-                        <label class="priority-choice priority-high"><input type="radio" name="priority" value="High"><span>High</span></label>
-                        <label class="priority-choice priority-medium"><input type="radio" name="priority" value="Medium" checked><span>Medium</span></label>
-                        <label class="priority-choice priority-low"><input type="radio" name="priority" value="Low"><span>Low</span></label>
-                    </div>
-                </fieldset>
-                <label class="task-field category-field" for="category-select">
-                    <span>Category</span>
-                    <select id="category-select">
-                        <option value="Work">Work</option>
-                        <option value="Personal">Personal</option>
-                        <option value="Urgent">Urgent</option>
-                    </select>
-                </label>
-                <button id="addbtn" type="submit">ADD</button>
-            </form>
+                    <button class="tab-pill task-view-filter" type="button" data-filter="active" aria-pressed="false">
+                        <span class="tab-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+                        <span class="tab-label">Active</span>
+                        <span class="tab-badge" id="count-active">0</span>
+                    </button>
+                    <button class="tab-pill task-view-filter" type="button" data-filter="completed" aria-pressed="false">
+                        <span class="tab-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></span>
+                        <span class="tab-label">Completed</span>
+                        <span class="tab-badge" id="count-completed">0</span>
+                    </button>
+                </nav>
+            </div>
 
-            <section id="progress-container" aria-label="Task progress">
-                <div class="progress-header">
-                    <span class="progress-title">Task progress</span>
-                    <span id="progress-stats">0% completed (0/0)</span>
+            <div class="section-title-wrap">
+                <h2 class="section-heading-text" id="section-heading-text">My Tasks</h2>
+            </div>
+
+            <section id="progress-container" aria-label="Task progress" class="progress-container">
+                <div class="progress-meta">
+                    <span class="progress-title">Task Progress</span>
+                    <span id="progress-stats" class="progress-stats">0% completed (0/0)</span>
                 </div>
                 <div class="progress-track" role="progressbar" aria-label="Tasks completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                     <div id="progress-bar"></div>
                 </div>
             </section>
 
-            <section id="todo-container" aria-label="Tasks">
-                <div class="section-heading">
-                    <h2 id="section-heading-text">Task items</h2>
+            <form id="task-form" class="task-form-card" style="display: none;">
+                <div class="form-title-row">
+                    <h3 id="form-heading">Create New Task</h3>
+                    <button id="close-form-btn" type="button" class="close-form-btn" aria-label="Close form">&times;</button>
                 </div>
-                <div class="filter-bar">
-                    <label class="visually-hidden" for="search-input">Search tasks</label>
-                    <input id="search-input" type="search" placeholder="Search tasks..." autocomplete="off">
+
+                <div class="form-grid">
+                    <label class="form-field full-width" for="task-input">
+                        <span class="field-label">Task Name</span>
+                        <input id="task-input" type="text" placeholder="What needs doing?" required>
+                    </label>
+
+                    <label class="form-field full-width" for="task-desc">
+                        <span class="field-label">Description / Notes</span>
+                        <textarea id="task-desc" rows="2" placeholder="Add additional details or notes..."></textarea>
+                    </label>
+
+                    <div class="form-field due-date-field">
+                        <span id="due-date-caption" class="field-label">Due Date</span>
+                        <input id="due-date" type="hidden">
+                        <button id="due-date-trigger" type="button" class="date-picker-trigger" aria-labelledby="due-date-caption due-date-label" aria-haspopup="dialog" aria-expanded="false" aria-controls="calendar-popover">
+                            <span class="field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
+                            <span id="due-date-label">Choose a date</span>
+                        </button>
+                        <div id="calendar-popover" class="calendar-popover" role="dialog" aria-label="Choose due date" hidden>
+                            <div class="calendar-header">
+                                <button id="calendar-previous" type="button" aria-label="Previous month">&lsaquo;</button>
+                                <h4 id="calendar-month"></h4>
+                                <button id="calendar-next" type="button" aria-label="Next month">&rsaquo;</button>
+                            </div>
+                            <div class="calendar-weekdays" aria-hidden="true">
+                                <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+                            </div>
+                            <div id="calendar-days" class="calendar-days" role="group" aria-label="Calendar days"></div>
+                            <div class="calendar-footer">
+                                <button id="calendar-clear" type="button">Clear</button>
+                                <button id="calendar-today" type="button">Today</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <label class="form-field category-field" for="category-select">
+                        <span class="field-label">Category</span>
+                        <select id="category-select">
+                            <option value="Work">Work</option>
+                            <option value="Personal">Personal</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </label>
+
+                    <fieldset class="form-field priority-field full-width">
+                        <legend class="field-label">Priority</legend>
+                        <div class="priority-options-group">
+                            <label class="priority-option priority-high">
+                                <input type="radio" name="priority" value="High">
+                                <span class="priority-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg> High</span>
+                            </label>
+                            <label class="priority-option priority-medium">
+                                <input type="radio" name="priority" value="Medium" checked>
+                                <span class="priority-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg> Medium</span>
+                            </label>
+                            <label class="priority-option priority-low">
+                                <input type="radio" name="priority" value="Low">
+                                <span class="priority-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg> Low</span>
+                            </label>
+                        </div>
+                    </fieldset>
                 </div>
-                <div class="task-table-wrap">
-                    <table id="todo-table">
-                        <caption class="visually-hidden">Saved tasks with categories, due dates, priorities, and status</caption>
-                        <thead>
-                            <tr><th scope="col">#</th><th scope="col">Task</th><th scope="col">Category</th><th scope="col">Due date</th><th scope="col">Priority</th><th scope="col">Status</th><th scope="col">Actions</th></tr>
-                        </thead>
-                        <tbody aria-live="polite"></tbody>
-                    </table>
+
+                <div class="form-buttons-row">
+                    <button id="reset-form-btn" type="button" class="btn-secondary">Cancel</button>
+                    <button id="addbtn" type="submit" class="btn-primary">ADD TASK</button>
                 </div>
+            </form>
+
+            <section id="todo-container" class="cards-section" aria-label="Tasks list">
+                <div id="cards-grid" class="cards-grid" aria-live="polite"></div>
             </section>
         </main>
     </div>
-    <div id="delete-modal" class="delete-modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title" hidden>
-        <div class="delete-modal-box">
-            <h2 id="delete-modal-title">Are you sure?</h2>
-            <p>This task will be deleted.</p>
-            <div class="delete-modal-actions">
-                <button id="cancel-delete" class="modal-btn modal-cancel-btn" type="button">Cancel</button>
-                <button id="confirm-delete" class="modal-btn modal-delete-btn" type="button">Delete</button>
-            </div>
-        </div>
-    </div>
+
     <script src="./script.js"></script>
 </body>
 </html>
